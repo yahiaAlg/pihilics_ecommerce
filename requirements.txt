@@ -1,20 +1,22 @@
 # Core framework
-Django==6.1.1
+Django
 
 # Admin bulk import/export for catalog.resources (ProductResource,
 # CategoryResource) -- see catalog/admin.py, catalog/resources.py.
-django-import-export==4.4.1
+django-import-export
 
 # Backs every ImageField (Product.image, Story.cover_image, CompanyInfo.logo).
-Pillow==12.3.0
+Pillow
 
 # CIB/Edahabia card payments -- orders/chargily.py talks to Chargily Pay's
 # hosted-checkout API through this client rather than a raw requests call,
 # so the request/response shapes stay in one maintained place.
-chargily-pay==2.1.3
+chargily-pay
 
 # Serves STATIC_ROOT (hashed + compressed) and MEDIA_ROOT straight from the
 # app process -- see the WhiteNoise block in config/settings.py. Lets the
 # project run the same under `runserver` and behind gunicorn, with no nginx
 # or object store required for assets.
-whitenoise==6.8.2
+whitenoise
+
+python-dotenv
