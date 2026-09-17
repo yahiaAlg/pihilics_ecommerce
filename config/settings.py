@@ -52,7 +52,10 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = env_bool("DJANGO_DEBUG", default=True)
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    "www.pihilics-product.com,pihilics-product.com,localhost,127.0.0.1",
+)
 
 # ---------------------------------------------------------------------------
 # Applications
