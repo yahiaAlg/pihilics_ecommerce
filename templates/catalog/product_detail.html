@@ -129,6 +129,50 @@
   </div>
 </section>
 
+{# ---------------------------------------------------------------- #}
+{# Optional product video (Product.video_source). Sits between the buy #}
+{# panel above and the spec tabs below: a trailer is what a shopper    #}
+{# reaches for after the price and before the spec sheet, and putting  #}
+{# it inside a tab would hide it behind a click most visitors never    #}
+{# make. Absent entirely when no video is configured — no empty frame, #}
+{# no placeholder.                                                     #}
+{#                                                                     #}
+{# The aspect-ratio box is doing real work: without a reserved 16:9    #}
+{# slot the page reflows the moment the player loads, shoving the tabs #}
+{# down under the reader's cursor. `aspect-ratio` is inline rather     #}
+{# than a new CSS class because this is the one place on the site that #}
+{# needs it.                                                           #}
+{# ---------------------------------------------------------------- #}
+{% with video=product.video_source %}
+{% if video %}
+<section class="section tight" style="padding-top:0" id="product-video">
+  <div class="container-x">
+    <div class="eyebrow" style="margin-bottom:14px">Watch</div>
+    <div style="position:relative;width:100%;aspect-ratio:16/9;background:var(--ink);overflow:hidden">
+      {% if video.kind == "file" %}
+      {# preload="metadata" fetches the duration and first frame, not the #}
+      {# whole film — a 200 MB autoload would be a rude thing to do to a #}
+      {# visitor on mobile data who only came to read the specs. #}
+      <video controls preload="metadata" playsinline
+             {% if video.poster %}poster="{{ video.poster }}"{% endif %}
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--ink)">
+        <source src="{{ video.url }}" type="{{ video.mime }}">
+        Your browser can't play this video.
+        <a href="{{ video.url }}" style="color:var(--volt)">Download it instead</a>.
+      </video>
+      {% else %}
+      <iframe src="{{ video.url }}" title="{{ product.name }} video"
+              loading="lazy" allowfullscreen
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              referrerpolicy="strict-origin-when-cross-origin"
+              style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endwith %}
+
 <section class="section tight" style="padding-top:0">
   <div class="container-x">
     <div class="product-tabs">

@@ -1,7 +1,62 @@
+import os
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
+
+from catalog.video import VIDEO_FILE_EXTENSIONS, mime_type_for, parse_video_url
+
+# An uploaded trailer is the largest thing an admin can put on this server,
+# so the ceiling is explicit rather than left to whatever the web server
+# happens to allow. 200 MB comfortably fits a two-minute 1080p product
+# film; anything longer belongs on YouTube, which is why the URL field
+# exists alongside this one.
+PRODUCT_VIDEO_MAX_BYTES = 200 * 1024 * 1024
+PRODUCT_VIDEO_CONTENT_TYPES = (
+    "video/mp4", "video/webm", "video/ogg", "video/quicktime", "video/x-m4v",
+)
+
+
+def validate_product_video(upload):
+    """
+    Rejects anything a browser couldn't play, or anything oversized.
+
+    Both the extension and the browser-supplied content type are checked,
+    the same way payment proofs are (orders.models.validate_payment_proof):
+    neither is trustworthy alone, but requiring both to land in a short
+    allow-list stops the obvious case of an archive renamed to .mp4. This
+    is an admin-only upload, so the threat model is mostly "someone picked
+    the wrong file" rather than a real attacker -- the size ceiling is the
+    part that earns its keep.
+    """
+    extension = os.path.splitext(upload.name)[1].lower()
+    if extension not in VIDEO_FILE_EXTENSIONS:
+        raise ValidationError(
+            "Upload a video file (%(allowed)s). “%(ext)s” files aren't accepted.",
+            params={"allowed": ", ".join(VIDEO_FILE_EXTENSIONS), "ext": extension or "unknown"},
+        )
+
+    content_type = getattr(upload, "content_type", None)
+    if content_type and content_type not in PRODUCT_VIDEO_CONTENT_TYPES:
+        raise ValidationError("That file doesn't look like a video.")
+
+    if upload.size and upload.size > PRODUCT_VIDEO_MAX_BYTES:
+        raise ValidationError(
+            "That file is %(size).0f MB. Product videos must be under %(limit)s MB — "
+            "for anything longer, paste a YouTube or Vimeo link instead.",
+            params={
+                "size": upload.size / (1024 * 1024),
+                "limit": PRODUCT_VIDEO_MAX_BYTES // (1024 * 1024),
+            },
+        )
+
+
+def product_video_upload_to(instance, filename):
+    """media/products/video/<slug>/<filename> — one folder per product, so
+    replacing a trailer doesn't leave the old one anonymous in a flat
+    directory."""
+    return f"products/video/{instance.slug or 'unsorted'}/{filename}"
 
 
 class ProductType(models.TextChoices):
@@ -90,7 +145,43 @@ class Product(models.Model):
     )
     review_count_cached = models.PositiveIntegerField(default=0)
 
-    video_trailer_url = models.URLField(blank=True, help_text="Motorcycles only: hero/trailer video reference.")
+    # -- Optional product video (motorcycles only, spec 8.2) --------------
+    #
+    # Two fields, one feature, because there are two genuinely different
+    # ways a shop ends up with a product film: it's already on YouTube or
+    # Vimeo (paste the link), or it's a file someone was handed and has
+    # nowhere to host (upload it). Supporting only the URL would force
+    # every video onto a third-party account; supporting only the upload
+    # would put avoidable megabytes through this server for videos that
+    # are already hosted perfectly well elsewhere.
+    #
+    # If both are filled in the uploaded file wins -- see `video_source`.
+    # That is a deliberate choice rather than a validation error: the
+    # realistic sequence is "we had a link, now we have the real file",
+    # and making the admin clear one field before filling the other adds
+    # a step for no benefit.
+    video_trailer_url = models.URLField(
+        blank=True,
+        verbose_name="Video link (YouTube / Vimeo)",
+        help_text="Motorcycles only. Paste a YouTube, Vimeo, or direct video-file link. "
+                  "Watch, youtu.be, Shorts and embed forms are all accepted. "
+                  "Ignored if a video file is uploaded below.",
+    )
+    video_file = models.FileField(
+        upload_to=product_video_upload_to,
+        blank=True,
+        validators=[validate_product_video],
+        verbose_name="Video file (upload)",
+        help_text=f"Motorcycles only. Optional. MP4 or WebM, under "
+                  f"{PRODUCT_VIDEO_MAX_BYTES // (1024 * 1024)} MB. Takes precedence over the link above.",
+    )
+    video_poster = models.ImageField(
+        upload_to="products/video/posters/",
+        blank=True,
+        help_text="Optional still shown before an uploaded video plays. "
+                  "Falls back to the product's first photo. Not used for YouTube/Vimeo, "
+                  "which supply their own thumbnail.",
+    )
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -105,6 +196,20 @@ class Product(models.Model):
     def clean(self):
         if self.product_type == ProductType.ACCESSORY and self.video_trailer_url:
             raise ValidationError({"video_trailer_url": "Only motorcycles may have a video trailer (spec 8.2)."})
+        if self.product_type == ProductType.ACCESSORY and self.video_file:
+            raise ValidationError({"video_file": "Only motorcycles may have a video trailer (spec 8.2)."})
+
+        # Caught here rather than left to render as an empty box on the
+        # product page: a channel URL, a playlist, or a link to a page that
+        # merely *contains* a video all look fine pasted into a text input
+        # and all produce nothing at all in an iframe. The admin finds out
+        # at save time instead of a customer finding out later.
+        if self.video_trailer_url and not parse_video_url(self.video_trailer_url)[0]:
+            raise ValidationError({
+                "video_trailer_url":
+                    "That link isn't a video we can embed. Use a YouTube or Vimeo video URL, "
+                    "or a direct link to a video file (" + ", ".join(VIDEO_FILE_EXTENSIONS) + ").",
+            })
         if self.pk and self.order_items.exists():
             original_slug = Product.objects.filter(pk=self.pk).values_list("slug", flat=True).first()
             if original_slug and original_slug != self.slug:
@@ -148,6 +253,44 @@ class Product(models.Model):
             AvailabilityStatus.PRE_ORDER: "pre-order",
             AvailabilityStatus.OUT_OF_STOCK: "out-stock",
         }[self.availability_status]
+
+    @property
+    def video_source(self):
+        """
+        Everything the template needs to render this product's video, or
+        None when there isn't one.
+
+        Returns a dict with `kind` ("file", "youtube" or "vimeo"), `url`
+        (a src for <video> / <iframe>), `mime` (for a <video><source>) and
+        `poster`. One property rather than three or four separate ones so
+        the template branches once, and so "which wins when both fields
+        are set" is answered here instead of in template logic.
+        """
+        if not self.is_motorcycle:
+            return None
+
+        if self.video_file:
+            first_image = self.images.first()
+            poster = self.video_poster.url if self.video_poster else (
+                first_image.image.url if first_image else ""
+            )
+            return {
+                "kind": "file",
+                "url": self.video_file.url,
+                "mime": mime_type_for(self.video_file.name),
+                "poster": poster,
+            }
+
+        kind, url = parse_video_url(self.video_trailer_url)
+        if not kind:
+            return None
+        if kind == "file":
+            return {"kind": "file", "url": url, "mime": mime_type_for(url), "poster": ""}
+        return {"kind": kind, "url": url, "mime": "", "poster": ""}
+
+    @property
+    def has_video(self):
+        return self.video_source is not None
 
     @property
     def average_rating(self):
