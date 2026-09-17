@@ -17,6 +17,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from catalog.templatetags.catalog_extras import _currency_affixes
 from orders.utils import calculate_discount, calculate_shipping_cost
 
 from .forms import AddToCartForm, CartItemUpdateForm, PromoCodeForm
@@ -80,12 +81,17 @@ def cart_detail_view(request):
     items = list(cart.items.select_related("product", "product__category"))
     for item in items:
         item.option_rows = _option_rows(item)
+    prefix, suffix = _currency_affixes()
     return render(request, "cart/cart.html", {
         "cart": cart,
         "items": items,
         "summary": _cart_summary(cart, request),
         "promo_form": PromoCodeForm(),
         "update_forms": {item.pk: CartItemUpdateForm(initial={"quantity": item.quantity}) for item in items},
+        # Same server-sourced affixes financing.html's calculator uses, so
+        # the AJAX-updated qty/summary figures below match the initial
+        # server-rendered `|price` amounts instead of a hardcoded "€".
+        "currency_affixes": {"prefix": prefix, "suffix": suffix},
     })
 
 

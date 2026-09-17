@@ -20,10 +20,13 @@ the box for local development with zero setup.
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # One level up from config/settings.py -- the project root where manage.py
 # and every app package live.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 
 
 def env_bool(name, default=False):
@@ -62,13 +65,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Third-party -- powers catalog.resources' ProductResource/CategoryResource
     # (django-import-export), registered onto ProductAdmin via
     # ImportExportModelAdmin. Needs to be a real installed app (not just
     # importable) so its admin templates/static assets are found.
     "import_export",
-
     # Project apps. `core` first since `core.constants` (wilaya choices,
     # language choices, ...) and `core.models.CompanyInfo`
     # are depended on by several of the others; the rest are alphabetical.
@@ -168,7 +169,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------------------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -266,7 +269,9 @@ SITE_URL = os.environ.get("SITE_URL", "https://pihilics.dz").rstrip("/")
 # same care as EMAIL_HOST_PASSWORD: never in git, never client-side.
 CHARGILY_KEY = os.environ.get("CHARGILY_KEY", "")
 CHARGILY_SECRET = os.environ.get("CHARGILY_SECRET", "")
-CHARGILY_API_URL = os.environ.get("CHARGILY_API_URL", "https://pay.chargily.net/test/api/v2/")
+CHARGILY_API_URL = os.environ.get(
+    "CHARGILY_API_URL", "https://pay.chargily.net/test/api/v2/"
+)
 
 # ---------------------------------------------------------------------------
 # Email (core.emails + <app>/notifications.py)
@@ -294,10 +299,14 @@ EMAIL_BACKEND = (
     else "django.core.mail.backends.console.EmailBackend"
 )
 
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", f"Pihilics <{EMAIL_HOST_USER}>")
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL", f"Pihilics <{EMAIL_HOST_USER}>"
+)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Fixed internal inbox that every admin-facing notification (new order, new
 # booking, contact-form alert, ...) is sent to -- distinct from
 # EMAIL_HOST_USER, which is only the SMTP login/sending identity.
-ADMIN_NOTIFICATION_EMAIL = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "admin@pihilics-product.com")
+ADMIN_NOTIFICATION_EMAIL = os.environ.get(
+    "ADMIN_NOTIFICATION_EMAIL", "admin@pihilics-product.com"
+)

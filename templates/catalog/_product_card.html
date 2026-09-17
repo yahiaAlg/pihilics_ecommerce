@@ -50,7 +50,7 @@
         <input type="hidden" name="quantity" value="1">
         {% with first_color=product.colors.first %}{% if first_color %}<input type="hidden" name="color" value="{{ first_color.name }}">{% endif %}{% endwith %}
         {% if product.is_accessory %}{% with first_size=product.sizes.first %}{% if first_size %}<input type="hidden" name="size" value="{{ first_size.label }}">{% endif %}{% endwith %}{% endif %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <input type="hidden" name="next" value="{% url 'cart:cart_detail' %}">
         <button type="submit" class="btn-volt btn-sm"><i class='bx bx-cart'></i>Add to Cart</button>
       </form>
       <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="btn-outline btn-sm">View</a>

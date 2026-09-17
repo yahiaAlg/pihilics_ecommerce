@@ -86,6 +86,7 @@
 
 {% block extra_scripts %}
 {% if items %}
+{{ currency_affixes|json_script:"cartCurrency" }}
 <script>
   /* Cart page: quantity stepper, remove, and promo-code validation are the
      "cart totals" / "promo-code validation" AJAX cases the djangofication
@@ -98,8 +99,12 @@
   (function () {
     var csrfToken = document.querySelector('#clearCartForm input[name=csrfmiddlewaretoken]').value;
 
+    // Currency affixes come from the server (CompanyInfo.default_currency),
+    // same pattern as programs/financing.html's calculator — was hardcoded
+    // to '€' here, which stayed stale once the brand switched to DA.
+    var CART_CUR = JSON.parse(document.getElementById('cartCurrency').textContent);
     function money(v) {
-      return '\u20ac' + Number(v).toLocaleString('en-US');
+      return CART_CUR.prefix + Number(v).toLocaleString('en-US') + CART_CUR.suffix;
     }
 
     function postForm(url, body) {
