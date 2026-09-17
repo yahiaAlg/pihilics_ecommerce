@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Create Account — {{ site_name }}{% endblock %}
+{% block meta_description %}Create your {{ site_name }} account.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-page { min-height: calc(100vh - 70px); display: flex; align-items: center; padding: 40px 0; }
+  .auth-card { max-width: 460px; margin: 0 auto; background: var(--white); border: 1px solid var(--line-light); padding: 40px; }
+  .auth-card h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }
+  .auth-card .auth-sub { color: #777; font-size: .9rem; margin-bottom: 28px; }
+  .auth-social { display: flex; gap: 10px; margin-bottom: 24px; }
+  .auth-social button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: 1px solid var(--line-light); background: var(--white); font-size: .85rem; font-weight: 600; transition: border-color .3s ease; }
+  .auth-social button:hover { border-color: var(--ink); }
+  .auth-divider { text-align: center; position: relative; margin: 24px 0; }
+  .auth-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--line-light); }
+  .auth-divider span { background: var(--white); padding: 0 14px; font-size: .78rem; color: #999; position: relative; }
+  .auth-footer { text-align: center; margin-top: 24px; font-size: .88rem; color: #777; }
+  .auth-footer a { color: var(--ink); font-weight: 700; }
+  .auth-benefits { max-width: 440px; margin: 0 auto; }
+  .auth-benefits h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; }
+  .auth-benefit { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .auth-benefit i { font-size: 1.5rem; color: var(--volt-dim); }
+  .auth-benefit p { font-size: .9rem; color: #555; }
+  .auth-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1000px; margin: 0 auto; }
+  .pass-strength { height: 4px; background: var(--bone-2); margin-top: 8px; overflow: hidden; }
+  .pass-strength-bar { height: 100%; width: 0; transition: width .3s ease, background-color .3s ease; }
+  @media (max-width: 768px) { .auth-layout { grid-template-columns: 1fr; gap: 30px; } .auth-benefits { display: none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="container-x">
+    <div class="auth-layout">
+      <div class="auth-benefits">
+        <h2>Join the {{ site_name }} Community</h2>
+        <p style="color:#555;margin-bottom:24px">Create an account to unlock the full {{ site_name }} experience — from building your dream bike to tracking every order.</p>
+        <div class="auth-benefit"><i class="bx bx-plus-medical"></i><p>Build and save custom motorcycle configurations</p></div>
+        <div class="auth-benefit"><i class="bx bx-git-compare"></i><p>Save and compare models side by side</p></div>
+        <div class="auth-benefit"><i class="bx bx-calendar"></i><p>Book test rides with one click</p></div>
+        <div class="auth-benefit"><i class="bx bx-support"></i><p>Priority support and service history</p></div>
+      </div>
+
+      <div class="auth-card">
+        <h1>Create Account</h1>
+        <p class="auth-sub">Join {{ site_name }} and start your electric journey.</p>
+
+        <div class="auth-social">
+          <button type="button" onclick="showToast('Google sign-up is a demo feature')"><i class="bx bxl-google" style="font-size:1.1rem"></i> Google</button>
+          <button type="button" onclick="showToast('Apple sign-up is a demo feature')"><i class="bx bxl-apple" style="font-size:1.1rem"></i> Apple</button>
+        </div>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        {% if form.non_field_errors %}
+        <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+          {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:register' %}">
+          {% csrf_token %}
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control" placeholder="John" value="{{ form.first_name.value|default:'' }}" required>
+              {% for error in form.first_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control" placeholder="Doe" value="{{ form.last_name.value|default:'' }}" required>
+              {% for error in form.last_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="john@email.com" value="{{ form.email.value|default:'' }}" required>
+            {% for error in form.email.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div style="position:relative">
+              <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required id="regPass" oninput="checkPassStrength(this.value)">
+              <button type="button" onclick="togglePass('regPass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;font-size:1.2rem;color:#999;cursor:pointer"><i class="bx bx-show"></i></button>
+            </div>
+            <div class="pass-strength"><div class="pass-strength-bar" id="passBar"></div></div>
+            <div style="font-size:.76rem;color:#999;margin-top:4px" id="passHint">Use 8+ characters with uppercase, a digit, and a special character</div>
+            {% for error in form.password.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required id="regPass2">
+            {% for error in form.confirm_password.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" name="terms_accepted" required> <label style="font-size:.82rem">I agree to the <a href="{% url 'content:terms' %}" style="text-decoration:underline;font-weight:700">Terms of Service</a> and <a href="{% url 'content:privacy' %}" style="text-decoration:underline;font-weight:700">Privacy Policy</a></label></label>
+            {% for error in form.terms_accepted.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" name="marketing_opt_in"> <label style="font-size:.82rem">Send me product updates and news</label></label>
+          </div>
+          <button type="submit" class="btn-volt btn-lg btn-block"><i class="bx bx-user-plus"></i>Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+          Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function togglePass(id, btn) {
+    var input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.innerHTML = '<i class="bx bx-hide"></i>'; }
+    else { input.type = 'password'; btn.innerHTML = '<i class="bx bx-show"></i>'; }
+  }
+
+  // Client-side hinting only, mirrors the reference's checkPassStrength() exactly
+  // (same 4 criteria as accounts.utils.validate_password_strength) — the real
+  // enforcement happens server-side in RegisterForm.clean_password().
+  function checkPassStrength(pass) {
+    var bar = document.getElementById('passBar');
+    var hint = document.getElementById('passHint');
+    var score = 0;
+    if (pass.length >= 8) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    var widths = ['0%', '25%', '50%', '75%', '100%'];
+    var colors = ['#ddd', '#e54848', '#f5a623', '#4a90d9', '#2ecf6b'];
+    var labels = ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'];
+    bar.style.width = widths[score];
+    bar.style.background = colors[score];
+    if (pass.length > 0) hint.textContent = labels[score];
+    else hint.textContent = 'Use 8+ characters with uppercase, a digit, and a special character';
+  }
+
+  // Passwords-must-match is a pure client-side UX nicety here; the server
+  // is still the source of truth (RegisterForm.clean() rejects a mismatch
+  // with a real form error even if this check is bypassed).
+  document.querySelector('form[action="{% url 'accounts:register' %}"]').addEventListener('submit', function (e) {
+    var p1 = document.getElementById('regPass').value;
+    var p2 = document.getElementById('regPass2').value;
+    if (p1 !== p2) {
+      e.preventDefault();
+      showToast('Passwords do not match', 'error');
+    }
+  });
+</script>
+{% endblock %}

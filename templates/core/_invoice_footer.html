@@ -1,0 +1,15 @@
+{# The core app's listed deliverable in the djangofication brief: the #}
+{# "company/invoice footer block" shared by the printable invoice and the #}
+{# order confirmation. All values come from the `core.CompanyInfo` singleton #}
+{# (registration number, VAT/TVA number, bank details, free-text legal note) #}
+{# — none of it was present in the static prototype, which had no company #}
+{# identity data at all. Expects `company` in context. #}
+<div style="border-top:1px solid var(--line-light);padding-top:16px;margin-top:32px;color:#999;font-size:.78rem;line-height:1.7">
+  {% if company.invoice_footer_note %}<p style="margin-bottom:8px">{{ company.invoice_footer_note }}</p>{% endif %}
+  <p>
+    {{ company.legal_name }}{% if company.registration_number %} • Reg. {{ company.registration_number }}{% endif %}{% if company.vat_number %} • VAT {{ company.vat_number }}{% endif %}<br>
+    {{ company.street }}, {{ company.postal_code }} {{ company.city }}, {{ company.get_wilaya_display }}<br>
+    {{ company.email }}{% if company.phone %} • {{ company.phone }}{% endif %}{% if company.website %} • {{ company.website }}{% endif %}
+    {% if company.iban %}<br>Bank: {{ company.bank_name }} • IBAN {{ company.iban }}{% if company.bic_swift %} • BIC {{ company.bic_swift }}{% endif %}{% endif %}
+  </p>
+</div>

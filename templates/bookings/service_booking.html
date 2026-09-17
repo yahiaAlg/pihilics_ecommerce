@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% load catalog_extras bookings_extras %}
+{% block title %}Book a Service — {{ site_name }}{% endblock %}
+{% block meta_description %}Schedule a service appointment for your {{ site_name }} motorcycle at a dealer near you.{% endblock %}
+
+{% block extra_head %}
+{# Copied VERBATIM from service.html's own <head> <style> block. None of #}
+{# these .svc-* classes exist in theme.css or pages.css (verified by grep) -- #}
+{# the reference page carries them inline. The ground rules freeze both #}
+{# shared stylesheets, and the DOM/class names must be preserved exactly, so #}
+{# the only correct move is to carry this block over unchanged rather than #}
+{# either appending to the frozen CSS or rewriting the markup to use other #}
+{# classes. Not one declaration is altered. #}
+<style>
+  .svc-layout { display: grid; grid-template-columns: 1fr 400px; gap: 40px; align-items: flex-start; }
+  .svc-form { background: var(--white); border: 1px solid var(--line-light); padding: 36px; }
+  .svc-info { position: sticky; top: 90px; }
+  .svc-info-card { background: var(--ink); color: var(--white); padding: 30px; margin-bottom: 20px; }
+  .svc-info-card h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 14px; }
+  .svc-info-card .info-item { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; font-size: .9rem; color: #c8c8c8; }
+  .svc-info-card .info-item i { font-size: 1.2rem; color: var(--volt); flex-shrink: 0; }
+  .svc-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+  .svc-type { border: 2px solid var(--line-light); padding: 20px; cursor: pointer; transition: all .3s ease; text-align: center; }
+  .svc-type:hover { border-color: var(--ink); }
+  .svc-type.active { border-color: var(--volt); background: #fffbe8; }
+  .svc-type i { font-size: 2rem; color: var(--volt-dim); margin-bottom: 8px; display: block; }
+  .svc-type h6 { font-weight: 700; font-size: .88rem; margin-bottom: 2px; }
+  .svc-type p { font-size: .76rem; color: #777; }
+  .svc-type .price { font-size: .85rem; font-weight: 800; margin-top: 6px; }
+  @media (max-width: 860px) { .svc-layout { grid-template-columns: 1fr; } .svc-info { position: static; } .svc-types { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Service &amp; Maintenance</div>
+    <h1 class="section-title">Book a Service</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Service</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="svc-layout">
+      <div class="svc-form">
+        <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:6px">Schedule Your Service</h3>
+        <p style="color:#777;font-size:.88rem;margin-bottom:24px">Electric drivetrains need minimal maintenance, but regular check-ups keep your {{ site_name }} performing at its best.</p>
+
+        <form method="post" action="{% url 'bookings:service_booking' %}">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+          <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+
+          <h6 style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Service Type</h6>
+          {# The reference's three .svc-type cards were decorative divs whose #}
+          {# selection was never submitted anywhere. They now render from real #}
+          {# ServiceTier rows and drive the form's required `service_tier` #}
+          {# field via a hidden input -- the card markup, classes and the #}
+          {# .active toggle are unchanged; only the data source and a hidden #}
+          {# input are new. Icons come from the explicit enum→Boxicon mapping #}
+          {# in bookings_extras, not from munging the tier name. #}
+          <div class="svc-types">
+            {% for tier in form.fields.service_tier.queryset %}
+            <div class="svc-type{% if form.service_tier.value|stringformat:'s' == tier.pk|stringformat:'s' or not form.service_tier.value and forloop.first %} active{% endif %}" data-svc="{{ tier.name }}" data-tier-id="{{ tier.pk }}">
+              <i class="bx {{ tier|service_tier_icon }}"></i>
+              <h6>{{ tier.get_name_display }}</h6>
+              <p>{{ tier.description }}</p>
+              <div class="price">{{ tier.price|price }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="service_tier" id="svcTierInput" value="{{ form.service_tier.value|default:'' }}">
+          {% for error in form.service_tier.errors %}<div style="color:var(--error);font-size:.8rem;margin-bottom:12px">{{ error }}</div>{% endfor %}
+
+          {% if garage_entries %}
+          {# No counterpart in the static build, which had no concept of an #}
+          {# owned bike. Spec 6.13's Garage entry point (`?garage_entry=<id>`) #}
+          {# needs the value to survive a failed POST, and a signed-in owner #}
+          {# should be able to pick which of their bikes the booking is for. #}
+          {# Shown only when the user actually has Garage entries. #}
+          <div class="form-group">
+            <label class="form-label">From Your Garage (optional)</label>
+            <select name="garage_entry" class="form-select">
+              <option value="">Not from my garage</option>
+              {% for entry in garage_entries %}
+              <option value="{{ entry.pk }}"{% if form.garage_entry.value|stringformat:"s" == entry.pk|stringformat:"s" %} selected{% endif %}>{{ entry.product.name }}{% if entry.vin %} — {{ entry.vin }}{% endif %}</option>
+              {% endfor %}
+            </select>
+            {% for error in form.garage_entry.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="form-group">
+            <label class="form-label">Your Motorcycle</label>
+            <select name="product" class="form-select" required>
+              <option value="">Select your bike...</option>
+              {% for product in form.fields.product.queryset %}
+              <option value="{{ product.pk }}"{% if form.product.value|stringformat:"s" == product.pk|stringformat:"s" %} selected{% endif %}>{{ product.name }}</option>
+              {% endfor %}
+            </select>
+            {% for error in form.product.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Dealer</label>
+            <select name="dealer" class="form-select" required>
+              <option value="">Select dealer...</option>
+              {% for dealer in form.fields.dealer.queryset %}
+              <option value="{{ dealer.pk }}"{% if form.dealer.value|stringformat:"s" == dealer.pk|stringformat:"s" %} selected{% endif %}>{{ dealer.name }}</option>
+              {% endfor %}
+            </select>
+            {% for error in form.dealer.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" name="date" class="form-control" id="svcDate" value="{{ form.date.value|default:'' }}" required>
+              {% for error in form.date.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Time</label>
+              {# Same divergence as the test-ride page: the mockup's seven #}
+              {# hourly options have no backing in TIME_SLOT_CHOICES (two #}
+              {# slots), which the DB slot constraint keys off. See TODO.md. #}
+              <select name="time_slot" class="form-select" required>
+                <option value="">Select time...</option>
+                {% for value, label in form.fields.time_slot.choices %}{% if value %}
+                <option value="{{ value }}"{% if form.time_slot.value == value %} selected{% endif %}>{{ label }}</option>
+                {% endif %}{% endfor %}
+              </select>
+              {% for error in form.time_slot.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" name="contact_first_name" class="form-control" placeholder="John" value="{{ form.contact_first_name.value|default:'' }}" required>
+              {% for error in form.contact_first_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="contact_last_name" class="form-control" placeholder="Doe" value="{{ form.contact_last_name.value|default:'' }}" required>
+              {% for error in form.contact_last_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="contact_email" class="form-control" placeholder="john@email.com" value="{{ form.contact_email.value|default:'' }}" required>
+            {% for error in form.contact_email.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="contact_phone" class="form-control" placeholder="+49 30 1234567" value="{{ form.contact_phone.value|default:'' }}" required>
+            {% for error in form.contact_phone.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <button type="submit" class="btn-volt btn-lg btn-block"><i class="bx bx-calendar-check"></i>Book Service</button>
+        </form>
+      </div>
+
+      <div class="svc-info">
+        <div class="svc-info-card">
+          <h3>What's Included</h3>
+          <div class="info-item"><i class="bx bx-check"></i>Software update to latest firmware</div>
+          <div class="info-item"><i class="bx bx-check"></i>Brake pad and disc inspection</div>
+          <div class="info-item"><i class="bx bx-check"></i>Tyre pressure and tread check</div>
+          <div class="info-item"><i class="bx bx-check"></i>Suspension setup and adjustment</div>
+          <div class="info-item"><i class="bx bx-check"></i>Battery health report</div>
+          <div class="info-item"><i class="bx bx-check"></i>Full diagnostic scan</div>
+        </div>
+        <div class="svc-info-card">
+          <h3>Service Intervals</h3>
+          <div class="info-item"><i class="bx bx-time"></i>First service: 1,000 km or 3 months</div>
+          <div class="info-item"><i class="bx bx-time"></i>Routine: every 5,000 km or 6 months</div>
+          <div class="info-item"><i class="bx bx-time"></i>Major: every 15,000 km or 12 months</div>
+          <div class="info-item"><i class="bx bx-time"></i>Battery: annually recommended</div>
+        </div>
+        <div class="svc-info-card">
+          <h3>Questions?</h3>
+          {# Flow-specific contact copy, kept literal — see test_ride.html. #}
+          <div class="info-item"><i class="bx bx-phone"></i>+49 30 555 0101</div>
+          <div class="info-item"><i class="bx bx-envelope"></i>service@pihilics.dz</div>
+          <a href="{% url 'content:support' %}" class="btn-ghost btn-sm" style="margin-top:14px">Help Center</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* Preserved from the reference: client-side min-date of tomorrow. The
+     authoritative check is ServiceBookingForm.clean_date(). */
+  var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('svcDate').min = tomorrow.toISOString().split('T')[0];
+
+  /* Same visual toggle as the reference's selectSvcType(), now also writing
+     the chosen tier's real pk into the hidden form field so the selection
+     actually submits. No AJAX -- the value rides along with the normal POST. */
+  var tierInput = document.getElementById('svcTierInput');
+  var cards = document.querySelectorAll('.svc-type');
+  function syncTier() {
+    var active = document.querySelector('.svc-type.active');
+    tierInput.value = active ? active.dataset.tierId : '';
+  }
+  cards.forEach(function (el) {
+    el.addEventListener('click', function () {
+      cards.forEach(function (t) { t.classList.remove('active'); });
+      el.classList.add('active');
+      syncTier();
+    });
+  });
+  syncTier();
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "emails/base_email.html" %}
+{% load catalog_extras %}
+
+{% block eyebrow_text %}Payment Instructions{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Hi {{ order.contact_first_name }},</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444;">
+  Your order <strong>{{ order.reference }}</strong> is reserved. To complete it, transfer
+  <strong>{{ order.total|price }}</strong> from BaridiMob, your CCP account, or your bank,
+  then upload the receipt so we can confirm it.
+</p>
+
+{% include "emails/_transfer_details.html" %}
+
+<p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:#444;">
+  Put <strong>{{ order.reference }}</strong> in the transfer reference if your app allows it —
+  it's what lets us match your payment straight away.
+</p>
+
+{% include "emails/_button.html" with url=payment_url label="Upload Payment Proof" %}
+
+<p style="margin:0 0 20px;font-size:12px;line-height:1.6;color:#666;">
+  We check every transfer by hand against our account, usually within one business day.
+  You'll get an email the moment it's confirmed. Nothing ships until then, so your order
+  is held for you in the meantime.
+</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#666;">
+  If the upload doesn't work, email the receipt to
+  <strong>{{ company.payment_proof_email }}</strong> with the subject
+  <strong>Payment order {{ order.reference }}</strong>.
+</p>
+{% endblock %}

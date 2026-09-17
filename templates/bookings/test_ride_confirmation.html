@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load bookings_extras %}
+{% block title %}Test Ride Booked — {{ site_name }}{% endblock %}
+{% block meta_description %}Your {{ site_name }} test ride request has been received.{% endblock %}
+
+{% block content %}
+{# The static build never navigated anywhere: submitTestRide() swapped the #}
+{# form's innerHTML for a success block in place. Under the PRG ground rule #}
+{# the POST redirects here instead, so that success block becomes a real #}
+{# page. Its markup is the reference's verbatim (.success-icon, the same #}
+{# heading sizes, the same sentence shape) with real booking data filled in #}
+{# and the container promoted from .testride-form to .testride-layout's #}
+{# single column, since there is no longer a form beside it. #}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Experience {{ site_name }}</div>
+    <h1 class="section-title">Book a Test Ride</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'bookings:test_ride' %}">Test Ride</a><span class="sep">/</span>
+      <span>Confirmation</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="testride-form" style="max-width:640px;margin:0 auto">
+      <div style="text-align:center;padding:40px 20px">
+        <div class="success-icon"><i class="bx bx-check"></i></div>
+        <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:12px">Booking Confirmed!</h2>
+        <p style="color:#555;max-width:400px;margin:0 auto 24px">Your test ride for {{ booking.product.name }} is booked for {{ booking.date|date:"N j, Y" }} at {{ booking.get_time_slot_display }} at {{ booking.dealer.name }}. We've sent a confirmation email with all the details.</p>
+        {# Not in the reference, which had no notion of a booking lifecycle. #}
+        {# A new booking is REQUESTED, not yet confirmed by the dealer #}
+        {# (BR-BK-03), so showing the real state avoids implying a #}
+        {# confirmation the dealer has not actually given. The badge class #}
+        {# comes from the explicit mapping in bookings_extras -- NOT a direct #}
+        {# swap: three of the four BookingStatus values have no CSS class at #}
+        {# all. See the long note in that module. #}
+        <div style="margin-bottom:24px"><span class="order-status-badge {{ booking.status|booking_status_class }}">{{ booking.get_status_display }}</span></div>
+        <div style="text-align:left;border-top:1px solid var(--line-light);padding-top:20px;margin-bottom:24px">
+          <div class="cart-summary-line"><span>Motorcycle</span><span>{{ booking.product.name }}</span></div>
+          <div class="cart-summary-line"><span>Dealer</span><span>{{ booking.dealer.name }}</span></div>
+          <div class="cart-summary-line"><span>Date</span><span>{{ booking.date|date:"N j, Y" }}</span></div>
+          <div class="cart-summary-line"><span>Time</span><span>{{ booking.get_time_slot_display }}</span></div>
+          <div class="cart-summary-line"><span>Contact</span><span>{{ booking.email }}</span></div>
+        </div>
+        <a href="{% url 'content:home' %}" class="btn-volt">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

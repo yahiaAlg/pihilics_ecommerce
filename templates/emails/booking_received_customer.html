@@ -1,0 +1,20 @@
+{% extends "emails/base_email.html" %}
+
+{% block eyebrow_text %}{{ booking_label }} Received{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Thanks, {{ first_name }}.</p>
+<p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#444;">
+  We've received your {{ booking_label|lower }} request. A member of our team at
+  <strong>{{ booking.dealer.name }}</strong> will confirm your slot shortly.
+</p>
+
+{% include "emails/_info_row.html" with label="Date" value=booking.date %}
+{% include "emails/_info_row.html" with label="Time" value=booking.get_time_slot_display %}
+{% include "emails/_info_row.html" with label="Dealer" value=booking.dealer.name %}
+{% include "emails/_info_row.html" with label="Status" value=booking.get_status_display %}
+
+<p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#444;">
+  {{ booking.dealer.address }}, {{ booking.dealer.city }} &middot; {{ booking.dealer.phone }}
+</p>
+{% endblock %}

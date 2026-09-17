@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Financing — {{ site_name }}{% endblock %}
+{% block meta_description %}Finance your {{ site_name }} electric motorcycle with flexible payment plans.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .fin-plan { background: var(--white); border: 1px solid var(--line-light); padding: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .fin-plan.featured { border-color: var(--volt); border-width: 2px; position: relative; }
+  .fin-plan.featured::before { content: 'POPULAR'; position: absolute; top: -10px; left: 24px; background: var(--volt); color: var(--ink); font-size: .65rem; font-weight: 800; letter-spacing: .08em; padding: 4px 10px; }
+  .fin-plan h3 { font-size: 1.3rem; font-weight: 800; }
+  .fin-plan .rate { font-size: 2.4rem; font-weight: 800; }
+  .fin-plan .rate span { font-size: 1rem; font-weight: 600; color: #777; }
+  .fin-plan ul li { display: flex; gap: 10px; align-items: center; font-size: .88rem; color: #555; margin-bottom: 8px; }
+  .fin-plan ul li i { color: var(--success); font-size: 1.1rem; }
+  .fin-calc { background: var(--ink); color: var(--white); padding: 40px; }
+  .fin-calc h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 24px; }
+  .fin-calc label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #999; display: block; margin-bottom: 8px; }
+  .fin-calc select, .fin-calc input { width: 100%; padding: 14px 16px; background: rgba(255,255,255,.06); border: 1px solid var(--line-dark); color: var(--white); font-size: .95rem; font-family: inherit; margin-bottom: 20px; }
+  .fin-calc .calc-result { border-top: 1px solid var(--line-dark); padding-top: 24px; margin-top: 10px; }
+  .fin-calc .calc-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: .92rem; color: #c8c8c8; }
+  .fin-calc .calc-total { display: flex; justify-content: space-between; padding-top: 16px; border-top: 2px solid var(--volt); font-size: 1.6rem; font-weight: 800; }
+  .fin-calc .calc-total span:last-child { color: var(--volt); }
+  .fin-plans-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 50px; }
+  .fin-layout { display: grid; grid-template-columns: 1fr 400px; gap: 40px; align-items: flex-start; }
+  @media (max-width: 860px) { .fin-plans-grid { grid-template-columns: 1fr; } .fin-layout { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Financing</div>
+    <h1 class="section-title">Ride Now, Pay Later</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Financing</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="fin-layout">
+      <div>
+        <div class="fin-plans-grid">
+          {% for plan in plans %}
+          <div class="fin-plan{% if plan.is_featured %} featured{% endif %}">
+            <h3>{{ plan.term_months }} Months</h3>
+            <div class="rate">{{ plan.apr|floatformat:"-2" }}% <span>APR</span></div>
+            <p style="font-size:.85rem;color:#777">{{ plan.description }}</p>
+            <ul>
+              {% if plan.apr %}
+              <li><i class='bx bx-check-circle'></i>{{ plan.apr|floatformat:"-2" }}% APR</li>
+              {% else %}
+              <li><i class='bx bx-check-circle'></i>0% interest</li>
+              {% endif %}
+              <li><i class='bx bx-check-circle'></i>No early repayment fee</li>
+              <li><i class='bx bx-check-circle'></i>Instant approval</li>
+              {% if plan.zero_down_option %}<li><i class='bx bx-check-circle'></i>{{ 0|price }} down payment option</li>{% endif %}
+            </ul>
+            <button type="button" class="{% if plan.is_featured %}btn-volt{% else %}btn-outline{% endif %} btn-block" onclick="showToast('Application started (demo)')">Apply Now</button>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div style="background:var(--white);border:1px solid var(--line-light);padding:32px;margin-bottom:30px">
+          <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:20px">How It Works</h3>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+            <div><div style="width:40px;height:40px;background:var(--volt);color:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:10px">1</div><h6 style="font-weight:700;margin-bottom:4px">Choose Your Bike</h6><p style="font-size:.82rem;color:#777">Select a motorcycle and add to cart.</p></div>
+            <div><div style="width:40px;height:40px;background:var(--volt);color:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:10px">2</div><h6 style="font-weight:700;margin-bottom:4px">Apply at Checkout</h6><p style="font-size:.82rem;color:#777">Get an instant decision in 60 seconds.</p></div>
+            <div><div style="width:40px;height:40px;background:var(--volt);color:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:10px">3</div><h6 style="font-weight:700;margin-bottom:4px">Sign &amp; Ride</h6><p style="font-size:.82rem;color:#777">Sign digitally and schedule delivery.</p></div>
+            <div><div style="width:40px;height:40px;background:var(--volt);color:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:10px">4</div><h6 style="font-weight:700;margin-bottom:4px">Pay Monthly</h6><p style="font-size:.82rem;color:#777">Automated monthly payments.</p></div>
+          </div>
+        </div>
+
+        <div style="background:var(--white);border:1px solid var(--line-light);padding:32px">
+          <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:20px">Frequently Asked Questions</h3>
+          <div class="accordion-item open"><div class="accordion-header" onclick="this.parentElement.classList.toggle('open')"><span>Who is eligible for financing?</span><i class='bx bx-chevron-down'></i></div><div class="accordion-body"><div class="accordion-body-inner">Residents of Algeria, age 18+, with a valid national ID (CNIB) and regular, documented income. A soft eligibility check is performed by our financing partner — it won't affect your standing with your bank.</div></div></div>
+          <div class="accordion-item"><div class="accordion-header" onclick="this.parentElement.classList.toggle('open')"><span>Is there a down payment?</span><i class='bx bx-chevron-down'></i></div><div class="accordion-body"><div class="accordion-body-inner">A down payment is optional. You can finance 100% of the purchase price or make a partial down payment to reduce your monthly installments.</div></div></div>
+          <div class="accordion-item"><div class="accordion-header" onclick="this.parentElement.classList.toggle('open')"><span>Can I pay off early?</span><i class='bx bx-chevron-down'></i></div><div class="accordion-body"><div class="accordion-body-inner">Yes. You can pay off the remaining balance at any time with no early repayment fees or penalties.</div></div></div>
+        </div>
+      </div>
+
+      <div class="fin-calc">
+        <h3><i class='bx bx-calculator'></i> Monthly Payment Calculator</h3>
+        <label for="finModel">Motorcycle</label>
+        <select id="finModel">
+          {% for product in form.fields.model.queryset %}
+          <option value="{{ product.price }}"{% if forloop.first %} selected{% endif %}>{{ product.name }} — {{ product.price|price }}</option>
+          {% endfor %}
+        </select>
+        <label for="finDown">Down Payment</label>
+        <input type="number" id="finDown" value="0" min="0" step="500">
+        <label for="finTerm">Term (months)</label>
+        <select id="finTerm">
+          {% for plan in plans %}
+          <option value="{{ plan.term_months }}"{% if plan.is_featured %} selected{% endif %}>{{ plan.term_months }} months</option>
+          {% endfor %}
+        </select>
+        <div class="calc-result">
+          <div class="calc-row"><span>Bike Price</span><span id="calcPrice">—</span></div>
+          <div class="calc-row"><span>Down Payment</span><span id="calcDown">—</span></div>
+          <div class="calc-row"><span>Financed Amount</span><span id="calcFinanced">—</span></div>
+          <div class="calc-row"><span>Interest Rate</span><span id="calcRate">—</span></div>
+          <div class="calc-total"><span>Monthly</span><span id="calcMonthly">—</span></div>
+        </div>
+        <button type="button" class="btn-volt btn-block" style="margin-top:20px" onclick="showToast('Application started (demo)')"><i class='bx bx-file-blank'></i>Start Application</button>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ currency_affixes|json_script:"finCurrency" }}
+<script>
+  /* Real per-term APR, keyed by term length — replaces the reference
+     build's hardcoded "0% APR" (js/data.js never modeled a non-zero
+     rate; the seeded FinancingPlan rows do: 12mo=4.90%, 24mo=0%, 36mo=3.90%).
+     No server round-trip needed: every value the calculator uses is
+     already in the DOM (select option values), so this stays plain
+     client-side JS rather than the app's whitelisted AJAX case. */
+  var FIN_APR_BY_TERM = { {% for plan in plans %}{{ plan.term_months }}: {{ plan.apr }}{% if not forloop.last %}, {% endif %}{% endfor %} };
+
+  // Currency affixes come from the server (CompanyInfo.default_currency)
+  // so this running total matches the server-rendered prices on the page.
+  var FIN_CUR = JSON.parse(document.getElementById('finCurrency').textContent);
+  function finFormatPrice(price) { return FIN_CUR.prefix + Math.round(price).toLocaleString('en-US') + FIN_CUR.suffix; }
+
+  function calcFin() {
+    var price = parseFloat(document.getElementById('finModel').value) || 0;
+    var down = parseFloat(document.getElementById('finDown').value) || 0;
+    var term = parseInt(document.getElementById('finTerm').value, 10);
+    if (down > price) down = price;
+    var financed = price - down;
+    var apr = FIN_APR_BY_TERM[term] || 0;
+    /* Monthly = financed / term, same as the reference build's calcFin().
+       Kept as simple division rather than an amortization formula: no
+       spec anywhere defines how interest should compound here, and this
+       calculator is explicitly informational only (functional spec 3.7,
+       11.3.8 — not wired to real underwriting or Checkout), so inventing
+       an amortization schedule would be adding structure the spec never
+       describes. The real APR is still shown on its own row below. */
+    var monthly = term ? (financed / term) : 0;
+    document.getElementById('calcPrice').textContent = finFormatPrice(price);
+    document.getElementById('calcDown').textContent = finFormatPrice(down);
+    document.getElementById('calcFinanced').textContent = finFormatPrice(financed);
+    document.getElementById('calcRate').textContent = apr.toFixed(2) + '% APR';
+    document.getElementById('calcMonthly').textContent = finFormatPrice(monthly);
+  }
+  document.getElementById('finModel').addEventListener('change', calcFin);
+  document.getElementById('finDown').addEventListener('input', calcFin);
+  document.getElementById('finTerm').addEventListener('change', calcFin);
+  calcFin();
+</script>
+{% endblock %}

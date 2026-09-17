@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}My Account — {{ site_name }}{% endblock %}
+{% block meta_description %}Your {{ site_name }} account dashboard.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Dashboard</div>
+    <h1 class="section-title">My Account</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Account</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="account-layout">
+      <aside class="account-sidebar">
+        <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+        <p style="font-size:.82rem;color:#999;margin-bottom:20px">{{ user.email }}</p>
+        <div class="account-nav-item active" data-section="profile"><i class="bx bx-user"></i>Profile</div>
+        <div class="account-nav-item" data-section="garage"><i class="bx bx-bike"></i>My Garage</div>
+        <div class="account-nav-item" data-section="orders"><i class="bx bx-package"></i>Orders</div>
+        <div class="account-nav-item" data-section="wishlist"><i class="bx bx-heart"></i>Wishlist</div>
+        <div class="account-nav-item" data-section="preferences"><i class="bx bx-cog"></i>Preferences</div>
+        <div class="account-nav-item" data-section="addresses"><i class="bx bx-map"></i>Addresses</div>
+        <div class="account-nav-item" data-section="support" style="margin-top:20px"><i class="bx bx-support"></i>Support</div>
+      </aside>
+
+      <div class="account-content">
+        <!-- Profile -->
+        <div class="account-section active" id="sec-profile">
+          <h2>Profile Information</h2>
+          <div style="background:var(--white);border:1px solid var(--line-light);padding:30px;max-width:600px">
+            <form method="post" action="{% url 'accounts:profile_update' %}">
+              {% csrf_token %}
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">First Name</label><input type="text" name="first_name" class="form-control" value="{{ profile_form.first_name.value|default:'' }}"></div>
+                <div class="form-group"><label class="form-label">Last Name</label><input type="text" name="last_name" class="form-control" value="{{ profile_form.last_name.value|default:'' }}"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ profile_form.email.value|default:'' }}"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input type="tel" name="phone" class="form-control" value="{{ profile_form.phone.value|default:'' }}"></div>
+              <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" class="form-control" value="{{ profile_form.date_of_birth.value|date:'Y-m-d'|default:'' }}"></div>
+              <button type="submit" class="btn-volt"><i class="bx bx-check"></i>Save Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Garage -->
+        <div class="account-section" id="sec-garage">
+          <h2>My Garage</h2>
+          <p style="color:#777;margin-bottom:24px">Motorcycles you own, registered for warranty and service tracking.</p>
+          <div id="garageList">
+            {% for entry in garage_entries %}
+            <div class="garage-card">
+              {% with image=entry.product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ entry.product.name }}">{% endif %}{% endwith %}
+              <div>
+                <h4 style="font-weight:800;margin-bottom:4px">{{ entry.product.name }}</h4>
+                <p style="color:#777;font-size:.85rem;margin-bottom:8px">VIN: {{ entry.vin }}</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  {% if entry.warranty_active %}<span class="chip success">Warranty Active</span>{% else %}<span class="chip error">Warranty Expired</span>{% endif %}
+                  {# GarageEntry has no mileage field (unlike the reference's "Service Due: 500 km") — service_due_at is a date, so that's what's rendered. #}
+                  {% if entry.service_due_at %}<span class="chip">Service Due: {{ entry.service_due_at|date:"M j, Y" }}</span>{% else %}<span class="chip">No Service Scheduled</span>{% endif %}
+                </div>
+                <div style="display:flex;gap:10px;margin-top:14px">
+                  <a href="{% url 'catalog:product_detail' slug=entry.product.slug %}" class="btn-outline btn-sm">View Details</a>
+                  <a href="{% url 'bookings:service_booking' %}" class="btn-outline btn-sm"><i class="bx bx-wrench"></i>Book Service</a>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p style="color:#999">Your garage is empty. Motorcycles you purchase are added here automatically.</p>
+            {% endfor %}
+          </div>
+          <a href="{% url 'catalog:shop' %}" class="btn-outline btn-sm" style="margin-top:14px"><i class="bx bx-plus"></i>Add a Motorcycle</a>
+        </div>
+
+        <!-- Orders -->
+        <div class="account-section" id="sec-orders">
+          <h2>Recent Orders</h2>
+          <div id="accountOrders">
+            {% for order in recent_orders|slice:":3" %}
+            <div class="order-card">
+              <div class="order-card-header">
+                <div><h4>{{ order.reference }}</h4><div class="order-date">{{ order.placed_at|date:"M j, Y" }}</div></div>
+                <span class="order-status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+              </div>
+              <div class="order-items-list">
+                {% for item in order.items.all %}
+                <div class="order-item-mini"><span>{{ item.product_name_snapshot }} ×{{ item.quantity }}</span></div>
+                {% endfor %}
+              </div>
+              <div class="order-card-footer">
+                <a href="{% url 'orders:order_track' reference=order.reference %}" class="btn-line">Track Order <i class="bx bx-right-arrow-alt"></i></a>
+                <div class="total">{{ order.total|price }}</div>
+              </div>
+            </div>
+            {% empty %}
+            <p style="color:#999">You haven't placed any orders yet. <a href="{% url 'catalog:shop' %}" style="color:var(--ink);font-weight:700">Browse motorcycles</a></p>
+            {% endfor %}
+          </div>
+          <a href="{% url 'orders:order_list' %}" class="btn-line" style="margin-top:14px">View All Orders <i class="bx bx-right-arrow-alt"></i></a>
+        </div>
+
+        <!-- Wishlist -->
+        <div class="account-section" id="sec-wishlist">
+          <h2>Wishlist</h2>
+          <div id="accountWish">
+            {% if wishlist_products %}
+            {% for product in wishlist_products %}
+            <div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--line-light);margin-bottom:10px;background:var(--white)">
+              {% with image=product.images.first %}{% if image %}<img src="{{ image.image.url }}" style="width:60px;height:60px;object-fit:cover">{% endif %}{% endwith %}
+              <div style="flex:1">
+                <h6 style="font-weight:700">{{ product.name }}</h6>
+                <div style="font-size:.85rem;color:#999">{{ product.price|price }}</div>
+              </div>
+              <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="btn-outline btn-sm">View</a>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="color:#999">Your wishlist is empty. <a href="{% url 'catalog:shop' %}" style="color:var(--ink);font-weight:700">Browse motorcycles</a></p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="account-section" id="sec-preferences">
+          <h2>Preferences</h2>
+          <div style="background:var(--white);border:1px solid var(--line-light);padding:30px;max-width:600px">
+            <form method="post" action="{% url 'accounts:preferences_update' %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label class="form-check"><input type="checkbox" name="marketing_opt_in" {% if preferences_form.marketing_opt_in.value %}checked{% endif %}> <label>Receive product updates and news</label></label>
+              </div>
+              <div class="form-group">
+                <label class="form-check"><input type="checkbox" name="order_notifications_opt_in" {% if preferences_form.order_notifications_opt_in.value %}checked{% endif %}> <label>Receive order notifications</label></label>
+              </div>
+              <div class="form-group">
+                <label class="form-check"><input type="checkbox" name="promo_opt_in" {% if preferences_form.promo_opt_in.value %}checked{% endif %}> <label>Receive promotional offers</label></label>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Language</label>
+                <select class="form-select" name="preferred_language">
+                  {% for value, label in preferences_form.fields.preferred_language.choices %}
+                  <option value="{{ value }}" {% if value == preferences_form.preferred_language.value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn-volt"><i class="bx bx-check"></i>Save Preferences</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Addresses -->
+        <div class="account-section" id="sec-addresses">
+          <h2>Saved Addresses</h2>
+          {% for address in addresses %}
+          <div style="background:var(--white);border:1px solid var(--line-light);padding:24px;margin-bottom:14px;max-width:600px">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+              <h5 style="font-weight:800">{{ address.label|default:"Address" }}</h5>
+              {% if address.is_default %}<span class="chip volt">Default</span>{% endif %}
+            </div>
+            <p style="color:#555;line-height:1.6">{{ user.first_name }} {{ user.last_name }}<br>{{ address.street }}<br>{{ address.postal_code }} {{ address.city }}, {{ address.get_wilaya_display }}</p>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <details style="display:inline-block">
+                <summary class="btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;list-style:none"><i class="bx bx-edit"></i>Edit</summary>
+                {# No reference markup exists for editing an address (the static build's Edit was a demo toast) — reusing the same form-group/form-control pattern as Profile/Preferences above, the only precedent this page has. #}
+                <form method="post" action="{% url 'accounts:address_update' pk=address.pk %}" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-light)">
+                  {% csrf_token %}
+                  <div class="form-group"><label class="form-label">Label</label><input type="text" name="label" class="form-control" value="{{ address.label }}"></div>
+                  <div class="form-group"><label class="form-label">Street</label><input type="text" name="street" class="form-control" value="{{ address.street }}" required></div>
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">City</label><input type="text" name="city" class="form-control" value="{{ address.city }}" required></div>
+                    <div class="form-group"><label class="form-label">Postal Code</label><input type="text" name="postal_code" class="form-control" value="{{ address.postal_code }}" required></div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Wilaya</label>
+                    <select class="form-select" name="wilaya" required>
+                      {% for value, label in address_form.fields.wilaya.choices %}
+                      <option value="{{ value }}" {% if value == address.wilaya %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="form-group"><label class="form-check"><input type="checkbox" name="is_default" {% if address.is_default %}checked{% endif %}> <label>Set as default</label></label></div>
+                  <button type="submit" class="btn-volt btn-sm"><i class="bx bx-check"></i>Save Address</button>
+                </form>
+              </details>
+              <form method="post" action="{% url 'accounts:address_delete' pk=address.pk %}" style="display:inline-block" onsubmit="return confirm('Remove this address?')">
+                {% csrf_token %}
+                <button type="submit" class="btn-outline btn-sm">Remove</button>
+              </form>
+            </div>
+          </div>
+          {% empty %}
+          <p style="color:#999;max-width:600px">No saved addresses yet.</p>
+          {% endfor %}
+
+          <details>
+            <summary class="btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;list-style:none"><i class="bx bx-plus"></i>Add New Address</summary>
+            <div style="background:var(--white);border:1px solid var(--line-light);padding:24px;margin-top:14px;max-width:600px">
+              <form method="post" action="{% url 'accounts:address_create' %}">
+                {% csrf_token %}
+                <div class="form-group"><label class="form-label">Label</label><input type="text" name="label" class="form-control" placeholder="e.g. Home, Work"></div>
+                <div class="form-group"><label class="form-label">Street</label><input type="text" name="street" class="form-control" required></div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">City</label><input type="text" name="city" class="form-control" required></div>
+                  <div class="form-group"><label class="form-label">Postal Code</label><input type="text" name="postal_code" class="form-control" required></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Wilaya</label>
+                  <select class="form-select" name="wilaya" required>
+                    <option value="">Select a wilaya…</option>
+                    {% for value, label in address_form.fields.wilaya.choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group"><label class="form-check"><input type="checkbox" name="is_default"> <label>Set as default</label></label></div>
+                <button type="submit" class="btn-volt btn-sm"><i class="bx bx-check"></i>Save Address</button>
+              </form>
+            </div>
+          </details>
+        </div>
+
+        <!-- Support -->
+        <div class="account-section" id="sec-support">
+          <h2>Support</h2>
+          <p style="color:#777;margin-bottom:20px">Need help? We're here for you.</p>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <a href="{% url 'content:support' %}" class="btn-volt"><i class="bx bx-help-circle"></i>Help Center</a>
+            <a href="{% url 'dealers:dealer_list' %}" class="btn-outline"><i class="bx bx-map"></i>Find a Dealer</a>
+            <a href="{% url 'bookings:test_ride' %}" class="btn-outline"><i class="bx bx-calendar"></i>Book a Test Ride</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Tab switching — pure visual state, no server request, ported verbatim from the static build.
+  document.querySelectorAll('.account-nav-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+      document.querySelectorAll('.account-nav-item').forEach(function (x) { x.classList.remove('active'); });
+      document.querySelectorAll('.account-section').forEach(function (x) { x.classList.remove('active'); });
+      item.classList.add('active');
+      document.getElementById('sec-' + item.dataset.section).classList.add('active');
+    });
+  });
+</script>
+{% endblock %}

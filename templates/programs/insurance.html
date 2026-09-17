@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Insurance — {{ site_name }}{% endblock %}
+{% block meta_description %}Comprehensive insurance for your {{ site_name }} electric motorcycle.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ins-plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+  .ins-plan { background: var(--white); border: 1px solid var(--line-light); padding: 32px; display: flex; flex-direction: column; gap: 14px; }
+  .ins-plan.featured { border-color: var(--volt); border-width: 2px; position: relative; }
+  .ins-plan.featured::before { content: 'BEST VALUE'; position: absolute; top: -10px; left: 24px; background: var(--volt); color: var(--ink); font-size: .65rem; font-weight: 800; letter-spacing: .08em; padding: 4px 10px; }
+  .ins-plan h3 { font-size: 1.2rem; font-weight: 800; }
+  .ins-plan .price { font-size: 2rem; font-weight: 800; }
+  .ins-plan .price span { font-size: .85rem; font-weight: 600; color: #777; }
+  .ins-plan ul li { display: flex; gap: 10px; align-items: flex-start; font-size: .85rem; color: #555; margin-bottom: 8px; }
+  .ins-plan ul li i { color: var(--success); font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+  .ins-plan ul li .no { color: #ccc; }
+  .ins-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+  .ins-feature { background: var(--white); border: 1px solid var(--line-light); padding: 24px; text-align: center; }
+  .ins-feature i { font-size: 2rem; color: var(--volt-dim); margin-bottom: 10px; display: block; }
+  .ins-feature h6 { font-weight: 700; margin-bottom: 4px; }
+  .ins-feature p { font-size: .82rem; color: #777; }
+  @media (max-width: 860px) { .ins-plans { grid-template-columns: 1fr; } .ins-features { grid-template-columns: repeat(2, 1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Protection</div>
+    <h1 class="section-title">Insurance</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Insurance</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div style="text-align:center;max-width:600px;margin:0 auto 50px" data-reveal>
+      <p class="body-l">Comprehensive insurance designed specifically for electric motorcycles. Underwritten by leading Algerian insurers, with instant claims and zero paperwork.</p>
+    </div>
+
+    <div class="ins-features">
+      <div class="ins-feature"><i class='bx bx-shield-quarter'></i><h6>Battery Cover</h6><p>Full coverage for your battery pack, including degradation.</p></div>
+      <div class="ins-feature"><i class='bx bx-bolt-circle'></i><h6>Charging Damage</h6><p>Covered at home, on the trail, and at public stations.</p></div>
+      <div class="ins-feature"><i class='bx bx-time-five'></i><h6>Instant Claims</h6><p>File and track claims from your phone in minutes.</p></div>
+      <div class="ins-feature"><i class='bx bx-globe'></i><h6>Nationwide Cover</h6><p>Protected across all 58 wilayas, north to south.</p></div>
+    </div>
+
+    <div class="ins-plans">
+      {% for tier in tiers %}
+      <div class="ins-plan{% if tier.is_featured %} featured{% endif %}">
+        <h3>{{ tier.get_name_display }}</h3>
+        <div class="price">{{ tier.monthly_price|price }}<span>/month</span></div>
+        <p style="font-size:.85rem;color:#777">{{ tier.blurb }}</p>
+        <ul>
+          {% for feature in tier.features %}
+          <li><i class='bx bx-check-circle'></i>{{ feature }}</li>
+          {% endfor %}
+        </ul>
+        <button type="button" class="{% if tier.is_featured %}btn-volt{% else %}btn-outline{% endif %} btn-block" onclick="showToast('Quote started (demo)')">Get a Quote</button>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="background:var(--ink);color:var(--white);padding:40px;text-align:center">
+      <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:10px">Bundled at Checkout</h3>
+      <p style="color:#c8c8c8;max-width:500px;margin:0 auto 20px">Add insurance during checkout and get your first 3 months free. No separate applications, no paperwork — everything in one place.</p>
+      <a href="{% url 'catalog:shop' %}" class="btn-volt"><i class='bx bx-store'></i>Browse Motorcycles</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

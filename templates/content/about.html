@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}About {{ site_name }} — Our Story{% endblock %}
+{% block meta_description %}{{ site_name }} builds electric motorcycles in Algeria for riders who go where the road ends.{% endblock %}
+
+{% block extra_head %}
+{% comment %} Copied VERBATIM from about.html's own <head> <style> block. None of these
+   page-local classes (.about-hero*, .timeline*, .values-grid, .value-card,
+   .team-grid, .team-card, .stats-row) exist in theme.css or pages.css --
+   the reference page carries them inline, exactly like service.html does.
+   Both shared stylesheets are frozen and the DOM/class names must be
+   preserved, so the block is carried over unchanged. Its
+   `.timeline-item::before { border-radius: 50% }` is one of the design
+   system's documented circular exceptions (a stepper/tracking-style dot),
+   not a new rounded component. {% endcomment %}
+<style>
+    .about-hero { position: relative; min-height: 60vh; display: flex; align-items: center; color: var(--white); overflow: hidden; }
+    .about-hero-bg { position: absolute; inset: 0; z-index: 0; }
+    .about-hero-bg img { width: 100%; height: 100%; object-fit: cover; }
+    .about-hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11,11,11,.9) 0%, rgba(11,11,11,.4) 100%); }
+    .about-hero-content { position: relative; z-index: 2; }
+    .timeline { position: relative; padding-left: 40px; }
+    .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: var(--line-light); }
+    .timeline-item { position: relative; padding-bottom: 40px; }
+    .timeline-item::before { content: ''; position: absolute; left: -30px; top: 4px; width: 14px; height: 14px; background: var(--volt); border-radius: 50%; }
+    .timeline-item h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .timeline-item .year { font-size: .82rem; font-weight: 700; color: var(--volt-dim); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .timeline-item p { color: #555; line-height: 1.6; font-size: .92rem; }
+    .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .value-card { background: var(--white); border: 1px solid var(--line-light); padding: 32px; }
+    .value-card i { font-size: 2.5rem; color: var(--volt-dim); margin-bottom: 14px; display: block; }
+    .value-card h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+    .value-card p { color: #555; line-height: 1.6; font-size: .9rem; }
+    .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .team-card { text-align: center; }
+    .team-card .avatar { width: 100%; aspect-ratio: 1; background: var(--charcoal); margin-bottom: 14px; overflow: hidden; }
+    .team-card .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .team-card h5 { font-weight: 700; font-size: .95rem; }
+    .team-card p { font-size: .82rem; color: #999; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; text-align: center; }
+    .stats-row .stat strong { font-size: 3rem; font-weight: 800; display: block; }
+    .stats-row .stat span { font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; color: #999; }
+    @media (max-width: 860px) { .values-grid { grid-template-columns: 1fr; } .team-grid { grid-template-columns: repeat(2, 1fr); } .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+{% endblock %}
+
+{% block content %}
+
+  <section class="about-hero">
+    <div class="about-hero-bg">
+      {% if about.hero_image %}<img src="{{ about.hero_image.url }}" alt="" />
+      {% elif hero_product %}{% with image=hero_product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="" />{% endif %}{% endwith %}{% endif %}
+      <div class="about-hero-overlay"></div>
+    </div>
+    <div class="about-hero-content container-x">
+      <div class="eyebrow split-line"><span>{{ about.hero_eyebrow }}</span></div>
+      <h1 class="display-title split-line"><span>{{ about.hero_title_line1 }}</span></h1>
+      <h1 class="display-title split-line"><span>{{ about.hero_title_line2 }}</span></h1>
+      <p class="body-l on-dark" style="max-width:500px;margin-top:20px" data-reveal>{{ about.hero_subtitle }}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-x">
+      <div class="split-layout">
+        <div data-reveal>
+          <div class="eyebrow">{{ about.mission_eyebrow }}</div>
+          <h2 class="section-title" style="margin:10px 0 20px">{{ about.mission_title }}</h2>
+          <p class="body-l" style="margin-bottom:16px">{{ about.mission_paragraph_1 }}</p>
+          <p class="body-l" style="margin-bottom:16px">{{ about.mission_paragraph_2 }}</p>
+          <p class="body-l">{{ about.mission_paragraph_3 }}</p>
+        </div>
+        <div data-reveal-img>
+          {% if about.mission_image %}<img src="{{ about.mission_image.url }}" alt="{{ site_name }} workshop" />
+          {% elif hero_product %}{% with image=hero_product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ site_name }} workshop" />{% endif %}{% endwith %}{% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section on-dark">
+    <div class="container-x">
+      <div style="text-align:center;margin-bottom:50px" data-reveal>
+        <div class="eyebrow">{{ about.stats_eyebrow }}</div>
+        <h2 class="section-title">{{ about.stats_title }}</h2>
+      </div>
+      <div class="stats-row" data-reveal>
+        <div class="stat"><strong>{{ motorcycle_count }}</strong><span>Motorcycle Models</span></div>
+        <div class="stat"><strong>{{ dealer_count }}</strong><span>Dealers Nationwide</span></div>
+        <div class="stat"><strong>{{ about.riders_stat_value }}</strong><span>{{ about.riders_stat_label }}</span></div>
+        <div class="stat"><strong>{{ about.co2_stat_value }}</strong><span>{{ about.co2_stat_label }}</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-x">
+      <div style="margin-bottom:50px" data-reveal>
+        <div class="eyebrow">{{ about.values_eyebrow }}</div>
+        <h2 class="section-title">{{ about.values_title }}</h2>
+      </div>
+      <div class="values-grid">
+        {% for value in about.values.all %}
+        <div class="value-card" data-reveal><i class="bx {{ value.icon }}"></i><h4>{{ value.title }}</h4><p>{{ value.body }}</p></div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section on-charcoal">
+    <div class="container-x">
+      <div style="margin-bottom:50px" data-reveal>
+        <div class="eyebrow">{{ about.timeline_eyebrow }}</div>
+        <h2 class="section-title">{{ about.timeline_title }}</h2>
+      </div>
+      <div class="timeline">
+        {% for event in about.timeline_events.all %}
+        <div class="timeline-item" data-reveal><div class="year">{{ event.year }}</div><h4>{{ event.title }}</h4><p>{{ event.body }}</p></div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-x">
+      <div style="margin-bottom:50px" data-reveal>
+        <div class="eyebrow">{{ about.team_eyebrow }}</div>
+        <h2 class="section-title">{{ about.team_title }}</h2>
+      </div>
+      <div class="team-grid">
+        {% for member in about.team_members.all %}
+        <div class="team-card" data-reveal><div class="avatar">{% if member.photo %}<img src="{{ member.photo.url }}" alt="{{ member.name }}" />{% endif %}</div><h5>{{ member.name }}</h5><p>{{ member.role }}</p></div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section on-dark">
+    <div class="container-x">
+      <div class="cta-block" data-reveal>
+        <div class="eyebrow">{{ about.cta_eyebrow }}</div>
+        <h2 class="section-title">{{ about.cta_title }}</h2>
+        <p class="body-l on-dark" style="max-width:500px;margin:20px auto 30px">{{ about.cta_body }}</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+          <a href="{% url 'bookings:test_ride' %}" class="btn-volt btn-lg"><i class="bx bx-calendar"></i>Book a Test Ride</a>
+          <a href="{% url 'catalog:shop' %}" class="btn-ghost btn-lg"><i class="bx bx-store"></i>Browse Motorcycles</a>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

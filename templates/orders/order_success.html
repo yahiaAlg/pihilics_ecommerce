@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load catalog_extras orders_extras %}
+{% block title %}Order Confirmed — {{ site_name }}{% endblock %}
+{% block meta_description %}Your {{ site_name }} order has been confirmed.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container-x">
+    <div class="order-success">
+      <div class="success-icon"><i class="bx bx-check"></i></div>
+      <h1>Order Confirmed!</h1>
+      <div class="order-number">Order Number: <strong>{{ order.reference }}</strong></div>
+      {% if order.requires_payment_proof %}
+      {# A transfer order isn't paid yet, so the generic "we're preparing it" #}
+      {# copy would be a lie and would bury the one action still required. #}
+      <p style="color:#555;max-width:520px;margin:0 auto">Thank you — your order is reserved. To complete it, transfer <strong>{{ order.total|price }}</strong> to our sales account and upload your receipt. We've emailed you the account details.</p>
+      <div style="margin-top:26px">
+        <a href="{% url 'orders:order_payment' reference=order.reference %}" class="btn-volt btn-lg"><i class="bx bx-transfer"></i>Complete Payment</a>
+      </div>
+      {% elif order.uses_card_gateway and order.payment_state != "confirmed" %}
+      {# Reached only when Chargily couldn't be reached at placement (see #}
+      {# orders.views.checkout_review_view) -- normally a CIB order skips #}
+      {# this page entirely and goes straight to Chargily's checkout. #}
+      <p style="color:#555;max-width:520px;margin:0 auto">Thank you — your order is reserved. We couldn't reach our payment provider just now; pay <strong>{{ order.total|price }}</strong> by card whenever you're ready and we'll pick it straight back up.</p>
+      <div style="margin-top:26px">
+        <a href="{% url 'orders:order_payment' reference=order.reference %}" class="btn-volt btn-lg"><i class="bx bx-credit-card"></i>Complete Payment</a>
+      </div>
+      {% else %}
+      <p style="color:#555;max-width:500px;margin:0 auto">Thank you for your purchase. We've sent a confirmation email with all the details. Your order is now being prepared for delivery.</p>
+      {% endif %}
+
+      <div class="order-success-steps">
+        <div class="order-success-step">
+          <i class="bx bx-envelope"></i>
+          <h6>Check Your Email</h6>
+          <p>Order confirmation and receipt sent to your inbox</p>
+        </div>
+        <div class="order-success-step">
+          <i class="bx bx-buildings"></i>
+          <h6>We're Building</h6>
+          <p>Your order is being assembled and quality-checked</p>
+        </div>
+        <div class="order-success-step">
+          <i class="bx bx-truck"></i>
+          <h6>Delivery in {% if order.delivery_method == "express" %}2–3{% else %}5–7{% endif %} Days</h6>
+          <p>Track your delivery from your account dashboard</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:40px">
+        <a href="{% url 'orders:order_track' reference=order.reference %}" class="btn-volt btn-lg"><i class="bx bx-package"></i>Track Your Order</a>
+        <a href="{% url 'accounts:account' %}" class="btn-outline btn-lg"><i class="bx bx-user"></i>Go to Account</a>
+        <a href="{% url 'catalog:shop' %}" class="btn-line"><i class="bx bx-store"></i>Continue Shopping</a>
+      </div>
+
+      <div style="margin-top:50px;background:var(--white);border:1px solid var(--line-light);padding:30px;max-width:600px;margin-left:auto;margin-right:auto;text-align:left">
+        <h4 style="font-weight:800;margin-bottom:16px">Order Summary</h4>
+        {% for item in order.items.all %}
+        <div class="cart-summary-line">
+          <span>{{ item.product_name_snapshot }}{% for row in item|option_rows %} — {{ row.label }}{% endfor %} ×{{ item.quantity }}</span>
+          <span>{{ item.line_total|price }}</span>
+        </div>
+        {% endfor %}
+        <div class="cart-summary-line"><span>Shipping</span><span>{% if order.shipping_cost == 0 %}Free{% else %}{{ order.shipping_cost|price }}{% endif %}</span></div>
+        {% if order.discount_amount %}<div class="cart-summary-line"><span>Discount</span><span>-{{ order.discount_amount|price }}</span></div>{% endif %}
+        <div class="cart-summary-line"><span>VAT</span><span>{{ order.vat_amount|price }}</span></div>
+        <div class="cart-summary-total"><span>{% if order.requires_payment_proof or order.uses_card_gateway and order.payment_state != "confirmed" %}Total Due{% else %}Total Paid{% endif %}</span><span>{{ order.total|price }}</span></div>
+      </div>
+
+      <div style="margin-top:30px;display:flex;align-items:center;gap:8px;justify-content:center;font-size:.85rem;color:#777">
+        <i class="bx bx-support" style="font-size:1.1rem;color:var(--volt-dim)"></i>
+        Need help? <a href="{% url 'support:contact' %}" style="color:var(--ink);font-weight:700">Contact our support team</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{# NOT PRESERVED 1:1 — flagged deliberately. The static order-success.html #}
+{# runs a GSAP entrance animation (success icon scale/rotate, staggered #}
+{# headline and step reveals). The djangofication brief scopes GSAP to #}
+{# "marketing/content templates" only, as an allowlist, and additionally #}
+{# names checkout templates in its exclusion list; an order-confirmation #}
+{# page is neither marketing nor content. The animation is therefore #}
+{# dropped rather than kept. The page's DOM, classes and copy are otherwise #}
+{# byte-for-byte the reference's, so re-enabling it later is purely #}
+{# additive if the rule is relaxed. #}
+{% endblock %}

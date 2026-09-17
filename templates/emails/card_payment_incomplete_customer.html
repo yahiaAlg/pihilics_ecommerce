@@ -1,0 +1,26 @@
+{% extends "emails/base_email.html" %}
+{% load catalog_extras %}
+
+{% block eyebrow_text %}Payment Not Completed{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Hi {{ order.contact_first_name }},</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444;">
+  Your card payment for order <strong>{{ order.reference }}</strong> didn't go through
+  {% if order.payment_state == "expired" %}— the payment page expired before it was completed.
+  {% elif order.payment_state == "canceled" %}— it looks like the payment was canceled partway through.
+  {% else %}— your bank declined the transaction.{% endif %}
+  Your order is still held for you; you can try again whenever you're ready.
+</p>
+
+{% include "emails/_info_row.html" with label="Order" value=order.reference %}
+{% include "emails/_info_row.html" with label="Amount" value=order.total|price %}
+{% include "emails/_info_row.html" with label="Status" value=order.get_payment_state_display %}
+
+{% include "emails/_button.html" with url=payment_url label="Try Payment Again" %}
+
+<p style="margin:0;font-size:12px;line-height:1.6;color:#666;">
+  If you'd rather not retry your card, reply to this email or contact support and we can switch
+  your order to BaridiMob transfer or another method instead.
+</p>
+{% endblock %}

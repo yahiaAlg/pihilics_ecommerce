@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found — {{ site_name }}{% endblock %}
+{% block meta_description %}The page you're looking for doesn't exist.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container-x">
+    <div class="error-page">
+      <div class="error-code">404</div>
+      <h1>{{ not_found.heading }}</h1>
+      <p>{{ not_found.body }}</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:50px">
+        <a href="{% url 'content:home' %}" class="btn-volt btn-lg"><i class="bx bx-home"></i>Back to Home</a>
+        <a href="{% url 'catalog:shop' %}" class="btn-outline btn-lg"><i class="bx bx-store"></i>Browse Motorcycles</a>
+        <a href="{% url 'support:contact' %}" class="btn-line"><i class="bx bx-support"></i>Contact Support</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;max-width:700px;margin:0 auto">
+        <a href="{% url 'catalog:shop' %}" style="background:var(--white);border:1px solid var(--line-light);padding:24px;text-align:center;transition:transform .3s ease" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+          <i class="bx bx-store" style="font-size:2rem;color:var(--volt-dim);margin-bottom:10px;display:block"></i>
+          <h6 style="font-weight:700">Motorcycles</h6>
+        </a>
+        <a href="{% url 'catalog:accessories' %}" style="background:var(--white);border:1px solid var(--line-light);padding:24px;text-align:center;transition:transform .3s ease" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+          <i class="bx bx-shopping-bag" style="font-size:2rem;color:var(--volt-dim);margin-bottom:10px;display:block"></i>
+          <h6 style="font-weight:700">Accessories</h6>
+        </a>
+        <a href="{% url 'catalog:configurator' %}" style="background:var(--white);border:1px solid var(--line-light);padding:24px;text-align:center;transition:transform .3s ease" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+          <i class="bx bx-plus-medical" style="font-size:2rem;color:var(--volt-dim);margin-bottom:10px;display:block"></i>
+          <h6 style="font-weight:700">Configurator</h6>
+        </a>
+        <a href="{% url 'dealers:dealer_list' %}" style="background:var(--white);border:1px solid var(--line-light);padding:24px;text-align:center;transition:transform .3s ease" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+          <i class="bx bx-map" style="font-size:2rem;color:var(--volt-dim);margin-bottom:10px;display:block"></i>
+          <h6 style="font-weight:700">Find a Dealer</h6>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* GSAP kept: 404 is a content/marketing template, inside the brief's
+     allowlist (unlike the order-confirmation page in Step 7). Copied
+     verbatim from the reference, including its prefers-reduced-motion guard. */
+  if (typeof gsap !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    gsap.from('.error-code', { scale: 0.5, opacity: 0, duration: 0.8, ease: 'back.out(1.7)' });
+    gsap.from('.error-page h1', { y: 30, opacity: 0, duration: 0.6, delay: 0.3 });
+    gsap.from('.error-page > p', { y: 20, opacity: 0, duration: 0.6, delay: 0.5 });
+    gsap.from('.error-page > div > a', { y: 30, opacity: 0, duration: 0.5, stagger: 0.1, delay: 0.7 });
+  }
+</script>
+{% endblock %}

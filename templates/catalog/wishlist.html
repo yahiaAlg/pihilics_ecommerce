@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Wishlist — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Saved Items</div>
+    <h1 class="section-title">Wishlist</h1>
+    <div class="breadcrumb"><a href="{% url 'content:home' %}">Home</a><span class="sep">/</span><span>Wishlist</span></div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:14px">
+      <div style="font-size:.88rem;color:#666"><strong>{{ products|length }}</strong> item{{ products|length|pluralize }} in your wishlist</div>
+      <div style="display:flex;gap:10px">
+        {% if products %}
+        <form method="post" action="{% url 'catalog:wishlist_move_all_to_cart' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-outline btn-sm"><i class="bx bx-cart"></i>Move All to Cart</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'catalog:shop' %}" class="btn-line"><i class="bx bx-store"></i>Continue Shopping</a>
+      </div>
+    </div>
+
+    {% if products %}
+    <div class="wishlist-grid">
+      {% for product in products %}
+      <div class="product-card" data-product-id="{{ product.id }}">
+        <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="product-card-media" style="display:block">
+          {% with image=product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ product.name }}" loading="lazy" />{% endif %}{% endwith %}
+        </a>
+        <div class="product-card-body">
+          <div class="product-card-cat">{{ product.category.name }}</div>
+          <div class="product-card-name">{{ product.name }}</div>
+          <div class="product-card-rating">{% star_rating product.average_rating %}<span class="count">({{ product.review_count_cached }})</span></div>
+          <div class="product-card-price">{{ product.price|price }}</div>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <form method="post" action="{% url 'catalog:wishlist_move_to_cart' %}">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <button type="submit" class="btn-volt btn-sm"><i class="bx bx-cart"></i>Move to Cart</button>
+            </form>
+            {% if product.is_motorcycle %}
+            <form method="post" action="{% url 'catalog:compare_toggle' %}">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <input type="hidden" name="next" value="{% url 'catalog:wishlist' %}">
+              <button type="submit" class="btn-outline btn-sm"><i class="bx bx-git-compare"></i>Compare</button>
+            </form>
+            {% endif %}
+            <form method="post" action="{% url 'catalog:wishlist_toggle' %}">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <button type="submit" class="btn-outline btn-sm"><i class="bx bx-trash"></i>Remove</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="grid-column:1/-1">
+      <i class="bx bx-heart"></i>
+      <h3>Your wishlist is empty</h3>
+      <p>Save motorcycles and accessories you love to find them here later.</p>
+      <a href="{% url 'catalog:shop' %}" class="btn-volt"><i class="bx bx-store"></i>Browse Motorcycles</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

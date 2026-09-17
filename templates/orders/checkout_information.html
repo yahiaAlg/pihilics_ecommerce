@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Checkout — {{ site_name }}{% endblock %}
+{% block meta_description %}Complete your {{ site_name }} purchase.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Checkout</div>
+    <h1 class="section-title">Complete Your Order</h1>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    {% include "orders/_checkout_stepper.html" %}
+
+    <div class="checkout-layout">
+      <div>
+        <form method="post" action="{% url 'orders:checkout_information' %}">
+          {% csrf_token %}
+          <div class="checkout-step active" data-step="1">
+            <div class="checkout-panel">
+              <h3>Contact Information</h3>
+              {% if form.non_field_errors %}
+              <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+              </div>
+              {% endif %}
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">First Name</label>
+                  <input type="text" name="first_name" class="form-control" placeholder="John" value="{{ form.first_name.value|default:'' }}" required>
+                  {% for error in form.first_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Last Name</label>
+                  <input type="text" name="last_name" class="form-control" placeholder="Doe" value="{{ form.last_name.value|default:'' }}" required>
+                  {% for error in form.last_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" placeholder="john@email.com" value="{{ form.email.value|default:'' }}" required>
+                {% for error in form.email.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" name="phone" class="form-control" placeholder="+213 555 12 34 56" value="{{ form.phone.value|default:'' }}" required>
+                {% for error in form.phone.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+              </div>
+            </div>
+            <button type="submit" class="btn-volt btn-lg">Continue to Delivery <i class="bx bx-right-arrow-alt"></i></button>
+          </div>
+        </form>
+      </div>
+
+      {% include "orders/_checkout_summary.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

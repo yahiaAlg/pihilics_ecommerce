@@ -1,0 +1,16 @@
+{% extends "emails/base_email.html" %}
+
+{% block eyebrow_text %}Message Received{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Thanks, {{ message.name }}.</p>
+<p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#444;">
+  We've received your message to our <strong>{{ message.get_department_display }}</strong> team and will be in
+  touch soon.
+</p>
+
+<div style="padding:18px 20px;background-color:#F4F3EF;">
+  {% if message.subject %}<p style="margin:0 0 8px;font-size:13px;font-weight:800;">{{ message.subject }}</p>{% endif %}
+  <p style="margin:0;font-size:13px;line-height:1.6;color:#444;white-space:pre-wrap;">{{ message.message }}</p>
+</div>
+{% endblock %}

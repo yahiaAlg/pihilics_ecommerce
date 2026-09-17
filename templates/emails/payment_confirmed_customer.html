@@ -1,0 +1,30 @@
+{% extends "emails/base_email.html" %}
+{% load catalog_extras %}
+
+{% block eyebrow_text %}Payment Confirmed{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Payment confirmed.</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444;">
+  {% if order.payment_method == "baridimob" %}
+  {{ order.contact_first_name }}, we've matched your transfer for order
+  <strong>{{ order.reference }}</strong> against our account. Your order is now moving
+  through fulfilment — no further payment is needed.
+  {% else %}
+  {{ order.contact_first_name }}, your card payment for order
+  <strong>{{ order.reference }}</strong> has gone through. Your order is now moving
+  through fulfilment — no further payment is needed.
+  {% endif %}
+</p>
+
+{% include "emails/_info_row.html" with label="Order" value=order.reference %}
+{% include "emails/_info_row.html" with label="Amount paid" value=order.total|price %}
+{% include "emails/_info_row.html" with label="Payment" value=order.get_payment_state_display %}
+{% include "emails/_info_row.html" with label="Order status" value=order.get_status_display %}
+
+{% include "emails/_button.html" with url=track_url label="Track Your Order" %}
+
+<p style="margin:0;font-size:12px;line-height:1.6;color:#666;">
+  Keep this email as your payment receipt.
+</p>
+{% endblock %}

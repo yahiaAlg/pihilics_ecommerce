@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load catalog_extras orders_extras %}
+{% block title %}Order {{ order.reference }} — {{ site_name }}{% endblock %}
+{% block meta_description %}Your order history and tracking.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Order History</div>
+    <h1 class="section-title">My Orders</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'accounts:account' %}">Account</a><span class="sep">/</span>
+      <a href="{% url 'orders:order_list' %}">Orders</a><span class="sep">/</span>
+      <span>{{ order.reference }}</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div id="orderDetail">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="font-size:1.6rem;font-weight:800">{{ order.reference }}</h2>
+          <div style="color:#999;font-size:.85rem">Placed on {{ order.placed_at|date:"N j, Y" }}</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <a href="{% url 'orders:order_list' %}" class="btn-outline"><i class="bx bx-left-arrow-alt"></i>Back to Orders</a>
+          {# "Documents" key requirement — the printable invoice has no entry #}
+          {# point in the static mockup (the page predates the requirement), #}
+          {# so it's surfaced here, on the order's own detail page, using the #}
+          {# same .btn-outline convention as its siblings. #}
+          <a href="{% url 'orders:order_invoice' reference=order.reference %}" class="btn-outline"><i class="bx bx-receipt"></i>Invoice</a>
+          {# An order still owing us payment -- a BaridiMob proof, or a CIB #}
+          {# checkout not yet confirmed -- has one outstanding action, and #}
+          {# this page is where a customer comes looking for it. #}
+          {% if order.payment_method != "manual" and order.payment_state != "confirmed" and order.status != "cancelled" %}
+          <a href="{% url 'orders:order_payment' reference=order.reference %}" class="btn-volt"><i class="bx bx-{% if order.uses_card_gateway %}credit-card{% else %}transfer{% endif %}"></i>{% if order.payment_state == "under_review" %}Payment Status{% else %}Complete Payment{% endif %}</a>
+          {% endif %}
+          {% if order.status == "delivered" %}
+          <button type="button" class="btn-volt" onclick="showToast('Reorder is a demo feature')"><i class="bx bx-refresh"></i>Reorder</button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:30px;margin-bottom:20px">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">Order Items</h3>
+        {% for item in order.items.all %}
+        <div class="order-review-item">
+          {% with image=item.product.images.first %}
+          {% if image %}<img src="{{ image.image.url }}" alt="">{% else %}<div style="width:60px;height:60px;background:var(--bone-2)"></div>{% endif %}
+          {% endwith %}
+          <div>
+            <h6>{{ item.product_name_snapshot }}</h6>
+            {% for row in item|option_rows %}<div style="font-size:.8rem;color:#999">{{ row.label }}{% if row.price %} (+{{ row.price|price }}){% endif %}</div>{% endfor %}
+            <div class="qty">Qty: {{ item.quantity }}</div>
+            <div style="font-weight:700">{{ item.line_total|price }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        {# The reference jumps straight from line items to a bare Total. Real #}
+        {# orders carry a stored Shipping/VAT/Discount snapshot (BR-CHK-06) #}
+        {# that must reconcile to that Total, so those rows are shown using #}
+        {# the existing .cart-summary-line class rather than printing a Total #}
+        {# the customer cannot arrive at from the lines above it. #}
+        <div style="border-top:1px solid var(--line-light);margin-top:16px;padding-top:16px">
+          <div class="cart-summary-line"><span>Subtotal</span><span>{{ order.subtotal|price }}</span></div>
+          {% if order.discount_amount %}<div class="cart-summary-line"><span>Discount{% if order.promo_code %} ({{ order.promo_code.code }}){% endif %}</span><span>-{{ order.discount_amount|price }}</span></div>{% endif %}
+          <div class="cart-summary-line"><span>Shipping</span><span>{% if order.shipping_cost == 0 %}Free{% else %}{{ order.shipping_cost|price }}{% endif %}</span></div>
+          <div class="cart-summary-line"><span>VAT</span><span>{{ order.vat_amount|price }}</span></div>
+        </div>
+        <div style="border-top:2px solid var(--ink);margin-top:16px;padding-top:16px;display:flex;justify-content:space-between;font-size:1.5rem;font-weight:800"><span>Total</span><span>{{ order.total|price }}</span></div>
+      </div>
+
+      <div class="checkout-panel" style="background:var(--white);border:1px solid var(--line-light);padding:30px">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">Delivery Address</h3>
+        <p style="color:#555;line-height:1.6">{{ order.contact_first_name }} {{ order.contact_last_name }}<br>{{ order.delivery_street }}<br>{{ order.delivery_postal_code }} {{ order.delivery_city }}, {{ order.get_delivery_wilaya_display }}<br>{{ order.contact_phone }}</p>
+        <p style="color:#999;font-size:.85rem;margin-top:10px">{{ order.get_delivery_method_display }} • Paid by {{ order.get_payment_method_display }}</p>
+      </div>
+
+      {% if order.financing_plan or order.insurance_tier %}
+      <div class="checkout-panel" style="background:var(--white);border:1px solid var(--line-light);padding:30px;margin-top:20px">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">Financing &amp; Insurance</h3>
+        {% if order.financing_plan %}<p style="color:#555">{{ order.financing_plan.term_months }} months at {{ order.financing_plan.apr|floatformat:"-2" }}% APR</p>{% endif %}
+        {% if order.insurance_tier %}<p style="color:#555">{{ order.insurance_tier.get_name_display }} — {{ order.insurance_tier.monthly_price|price }}/mo</p>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

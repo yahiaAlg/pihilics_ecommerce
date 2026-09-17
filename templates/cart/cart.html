@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+
+{% block title %}Cart — {{ site_name }}{% endblock %}
+{% block meta_description %}Your {{ site_name }} shopping cart.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Shopping Cart</div>
+    <h1 class="section-title">Your Cart</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Cart</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div id="cartContent">
+      {% if not items %}
+      <div class="empty-state">
+        <i class="bx bx-cart-alt"></i>
+        <h3>Your cart is empty</h3>
+        <p>You haven't added any motorcycles or accessories yet. Let's fix that.</p>
+        <a href="{% url 'catalog:shop' %}" class="btn-volt"><i class="bx bx-store"></i>Browse Motorcycles</a>
+      </div>
+      {% else %}
+      {# Hidden PRG form for "Clear Cart" (plumbing only — invisible, no reference #}
+      {# equivalent existed since the static build had no server round-trip at all; #}
+      {# also doubles as this page's one CSRF token source for the AJAX calls below). #}
+      <form method="post" action="{% url 'cart:clear_cart' %}" id="clearCartForm" style="display:none">{% csrf_token %}</form>
+      <div class="cart-layout">
+        <div style="background:var(--white);border:1px solid var(--line-light);padding:30px">
+          <h3 id="cartItemsHeading" style="font-size:1.2rem;font-weight:800;margin-bottom:20px">Cart Items ({{ items|length }})</h3>
+          {% for item in items %}
+          <div class="cart-item" data-key="{{ item.pk }}" data-unit-price="{{ item.unit_price }}"
+               data-update-url="{% url 'cart:update_item' item.pk %}" data-remove-url="{% url 'cart:remove_item' item.pk %}">
+            {% with image=item.product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ item.product.name }}" />{% endif %}{% endwith %}
+            <div class="cart-item-info">
+              <h4>{{ item.product.name }}</h4>
+              <div class="item-meta">{{ item.product.category.name|default:"" }}{% if item.option_rows %} • {% for row in item.option_rows %}<div>{{ row.label }}{% if row.price %} (+{{ row.price|price }}){% endif %}</div>{% endfor %}{% endif %}</div>
+              <div style="display:flex;gap:14px;margin-top:10px;align-items:center">
+                <div class="qty-selector">
+                  <button type="button" data-qty-btn="-1"{% if item.quantity <= 1 %} disabled{% endif %}>-</button>
+                  <input type="number" value="{{ item.quantity }}" readonly>
+                  <button type="button" data-qty-btn="1">+</button>
+                </div>
+                <button type="button" class="cart-item-remove" data-cart-remove><i class="bx bx-trash"></i></button>
+              </div>
+            </div>
+            <div class="cart-item-price">{{ item.line_total|price }}</div>
+          </div>
+          {% endfor %}
+          <div style="margin-top:20px;display:flex;justify-content:space-between">
+            <a href="{% url 'catalog:shop' %}" class="btn-line"><i class="bx bx-left-arrow-alt"></i>Continue Shopping</a>
+            <button type="button" class="btn-outline btn-sm" data-clear-cart><i class="bx bx-trash"></i>Clear Cart</button>
+          </div>
+        </div>
+        <div class="cart-summary">
+          <h3>Order Summary</h3>
+          <div class="cart-summary-line"><span>Subtotal</span><span id="cartSubtotal">{{ summary.subtotal|price }}</span></div>
+          <div class="cart-summary-line"><span>Shipping</span><span id="cartShipping">{% if summary.free_shipping %}Free{% else %}{{ summary.shipping_cost|price }}{% endif %}</span></div>
+          <div class="promo-input"><input type="text" placeholder="Promo code" id="promoCode"><button type="button" id="promoApplyBtn">Apply</button></div>
+          <div class="cart-summary-line" id="discountLine" style="display:{% if summary.promo_code %}flex{% else %}none{% endif %}"><span>Discount</span><span id="discountAmount">-{{ summary.discount_amount|price }}</span></div>
+          <div class="cart-summary-total"><span>Total</span><span id="cartTotal">{{ summary.total|price }}</span></div>
+          <div style="margin-top:20px">
+            <a href="{% url 'orders:checkout_information' %}" class="btn-volt btn-block btn-lg"><i class="bx bx-rocket"></i>Proceed to Checkout</a>
+          </div>
+          <div style="margin-top:16px;display:flex;justify-content:center;gap:10px;font-size:.78rem;font-weight:700;color:#999">
+            <span><i class="bx bx-credit-card"></i> CIB / Edahabia</span>
+            <span>&middot;</span>
+            <span><i class="bx bx-money"></i> Manual Order</span>
+          </div>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:.82rem;color:#666;justify-content:center">
+            <i class="bx bx-lock-alt" style="color:var(--success)"></i>Secure checkout
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if items %}
+<script>
+  /* Cart page: quantity stepper, remove, and promo-code validation are the
+     "cart totals" / "promo-code validation" AJAX cases the djangofication
+     brief explicitly allows (spec Key Requirements) — everything else on
+     this page (Continue Shopping, Clear Cart, Checkout) is plain navigation
+     or a real PRG POST. Mirrors the static build's updateQty()/removeItem()/
+     applyPromo() behavior (instant, no full reload) against the real
+     cart:update_item / cart:remove_item / cart:apply_promo endpoints instead
+     of localStorage. */
+  (function () {
+    var csrfToken = document.querySelector('#clearCartForm input[name=csrfmiddlewaretoken]').value;
+
+    function money(v) {
+      return '\u20ac' + Number(v).toLocaleString('en-US');
+    }
+
+    function postForm(url, body) {
+      return fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body
+      }).then(function (r) {
+        return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+      });
+    }
+
+    function applySummary(summary) {
+      document.getElementById('cartSubtotal').textContent = money(summary.subtotal);
+      document.getElementById('cartShipping').textContent = summary.free_shipping ? 'Free' : money(summary.shipping_cost);
+      var discountLine = document.getElementById('discountLine');
+      if (summary.promo_code) {
+        discountLine.style.display = 'flex';
+        document.getElementById('discountAmount').textContent = '-' + money(summary.discount_amount);
+      } else {
+        discountLine.style.display = 'none';
+      }
+      document.getElementById('cartTotal').textContent = money(summary.total);
+
+      var badge = document.querySelector('[data-cart-count]');
+      if (badge) {
+        badge.textContent = summary.item_count;
+        badge.style.display = summary.item_count ? '' : 'none';
+      }
+    }
+
+    document.querySelectorAll('.cart-item').forEach(function (row) {
+      var qtyInput = row.querySelector('.qty-selector input');
+      var minusBtn = row.querySelector('[data-qty-btn="-1"]');
+      var plusBtn = row.querySelector('[data-qty-btn="1"]');
+      var removeBtn = row.querySelector('[data-cart-remove]');
+      var unitPrice = parseFloat(row.getAttribute('data-unit-price'));
+      var priceBox = row.querySelector('.cart-item-price');
+      var updateUrl = row.getAttribute('data-update-url');
+      var removeUrl = row.getAttribute('data-remove-url');
+
+      function setQty(newQty) {
+        newQty = Math.max(1, newQty);
+        if (newQty === parseInt(qtyInput.value, 10)) return;
+        postForm(updateUrl, 'quantity=' + newQty).then(function (res) {
+          if (res.ok && res.data.ok) {
+            qtyInput.value = newQty;
+            priceBox.textContent = money(unitPrice * newQty);
+            minusBtn.disabled = newQty <= 1;
+            applySummary(res.data.summary);
+          } else {
+            showToast('Could not update quantity', 'error');
+          }
+        });
+      }
+
+      if (minusBtn) minusBtn.addEventListener('click', function () { setQty(parseInt(qtyInput.value, 10) - 1); });
+      if (plusBtn) plusBtn.addEventListener('click', function () { setQty(parseInt(qtyInput.value, 10) + 1); });
+
+      if (removeBtn) removeBtn.addEventListener('click', function () {
+        postForm(removeUrl, '').then(function (res) {
+          if (res.ok && res.data.ok) {
+            row.remove();
+            showToast('Item removed');
+            var remaining = document.querySelectorAll('.cart-item').length;
+            if (remaining === 0) {
+              /* Last line removed — reload to the server-rendered empty
+                 state rather than duplicating that markup a second time
+                 in JS (it already exists once, server-side, above). */
+              window.location.reload();
+              return;
+            }
+            document.getElementById('cartItemsHeading').textContent = 'Cart Items (' + remaining + ')';
+            applySummary(res.data.summary);
+          } else {
+            showToast('Could not remove item', 'error');
+          }
+        });
+      });
+    });
+
+    var promoBtn = document.getElementById('promoApplyBtn');
+    if (promoBtn) {
+      promoBtn.addEventListener('click', function () {
+        var codeInput = document.getElementById('promoCode');
+        var code = codeInput.value.trim();
+        if (!code) return;
+        postForm('{% url "cart:apply_promo" %}', 'code=' + encodeURIComponent(code)).then(function (res) {
+          if (res.ok && res.data.ok) {
+            applySummary(res.data.summary);
+            showToast('Promo code applied', 'success');
+          } else {
+            showToast('Invalid promo code', 'error');
+          }
+        });
+      });
+    }
+
+    var clearBtn = document.querySelector('[data-clear-cart]');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        document.getElementById('clearCartForm').submit();
+      });
+    }
+  })();
+</script>
+{% endif %}
+{% endblock %}

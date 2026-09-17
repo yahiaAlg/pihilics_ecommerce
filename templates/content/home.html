@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}{{ site_name }}{% if site_tagline %} — {{ site_tagline }}{% endif %}{% endblock %}
+{% block meta_description %}{{ site_tagline|default:"Electric bikes and motorcycles, delivered to all 58 wilayas." }}{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    {% if home.hero_image %}<img src="{{ home.hero_image.url }}" alt="" />
+    {% elif flagship %}{% with image=flagship.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="" />{% endif %}{% endwith %}{% endif %}
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content container-x">
+    <div class="eyebrow split-line"><span>{{ home.hero_eyebrow }}</span></div>
+    <h1 class="display-title split-line"><span>{{ home.hero_title_line1 }}</span></h1>
+    <h1 class="display-title split-line"><span>{{ home.hero_title_line2 }}</span></h1>
+    <p class="body-l on-dark hero-sub" data-reveal>{{ home.hero_subtitle }}</p>
+    <div class="hero-cta" data-reveal>
+      <a href="{% url 'catalog:shop' %}" class="btn-volt btn-lg"><i class='bx bx-store'></i>Shop Motorcycles</a>
+      <a href="{% url 'catalog:configurator' %}" class="btn-ghost btn-lg"><i class='bx bx-plus-medical'></i>Build Your Own</a>
+    </div>
+    {# Brand headline claims across the whole lineup, not one product's spec #}
+    {# sheet -- admin-editable rows (HomeHeroStat), not bound to a single #}
+    {# Product, so they'd never accidentally start describing one bike only. #}
+    <div class="hero-stats" data-reveal>
+      {% for stat in home.hero_stats.all %}
+      <div><strong>{{ stat.value }}</strong><span>{{ stat.label }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <i class='bx bx-down-arrow-alt'></i>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+{# The reference repeats its claims twice to fill the scrolling track; that #}
+{# duplication is preserved exactly. Only the dealer count is real. #}
+<div class="marquee">
+  <div class="marquee-track">
+    {% for item in home.marquee_items.all %}<span>{{ item.text }}</span><i class='bx bxs-circle'></i>{% endfor %}
+    <span>{{ dealer_count }} DEALERS ACROSS ALGERIA</span><i class='bx bxs-circle'></i>
+    {% for item in home.marquee_items.all %}<span>{{ item.text }}</span><i class='bx bxs-circle'></i>{% endfor %}
+    <span>{{ dealer_count }} DEALERS ACROSS ALGERIA</span><i class='bx bxs-circle'></i>
+  </div>
+</div>
+
+<!-- BATTERY SWAP -->
+{# Merged from landing-page-v1's "04 — BATTERY SWAP". The latch/glow swap #}
+{# animation had no data behind it, so it's not reproduced; the section is #}
+{# real copy (HomePageContent.battery_*) plus a real image, same #}
+{# hero_image-style fallback to the flagship's own photo when empty. #}
+<section class="battery-section">
+  <div class="container-x battery-inner">
+    <div class="battery-copy">
+      <div class="eyebrow" style="color:var(--volt)" data-reveal>{{ home.battery_eyebrow }}</div>
+      <h2 class="display-title" data-reveal><span>{{ home.battery_title_line1 }}</span><br><span>{{ home.battery_title_line2 }}</span></h2>
+      <p class="body-l on-dark" data-reveal>{{ home.battery_body }}</p>
+      <ul class="battery-list" data-reveal>
+        <li><i class='bx bx-lock-open-alt'></i> Single-latch release, tool-free</li>
+        <li><i class='bx bx-battery-charging'></i> Hot-swappable under load</li>
+        <li><i class='bx bx-shield-quarter'></i> Sealed against mud, dust and water</li>
+      </ul>
+    </div>
+    <div class="battery-media" data-reveal-img>
+      {% if home.battery_image %}<img src="{{ home.battery_image.url }}" alt="{{ home.battery_title_line1 }} {{ home.battery_title_line2 }}" />
+      {% elif flagship %}{% with image=flagship.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ flagship.name }} battery bay" />{% endif %}{% endwith %}{% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED MODELS -->
+<section class="section">
+  <div class="container-x">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-reveal>The Fleet</div>
+        <h2 class="section-title" data-reveal>Choose Your Weapon</h2>
+      </div>
+      <a href="{% url 'catalog:shop' %}" class="btn-line" data-reveal>View All Models <i class='bx bx-right-arrow-alt'></i></a>
+    </div>
+    {# The reference filled #featuredGrid via productCardHTML(); this reuses #}
+    {# the same shared partial every other catalog page already uses, so the #}
+    {# card markup can never drift between Home and Shop. #}
+    <div class="product-grid" id="featuredGrid">
+      {% for product in featured_motorcycles %}{% include "catalog/_product_card.html" %}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section on-dark">
+  <div class="container-x">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-reveal>By Terrain</div>
+        <h2 class="section-title" data-reveal>Find Your Category</h2>
+      </div>
+    </div>
+    <div class="category-grid">
+      {% for category in motorcycle_categories %}
+      {# FLAGGED: the reference hardcoded an eyebrow tagline per tile #}
+      {# ("Hard Enduro", "All-Day Comfort", "Long Range", "Street Legal"). #}
+      {# Category has no tagline/description field, so there is nothing real #}
+      {# to source them from. Rather than invent copy for admin-created #}
+      {# categories or drop the eyebrow (which would change the tile's #}
+      {# layout), the eyebrow shows the category's product type label. #}
+      <a href="{% url 'catalog:shop' %}?category={{ category.slug }}" class="category-card" data-reveal data-reveal-img>
+        {% with product=category.products.first %}
+        {% if product %}{% with image=product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ category.name }}" />{% endif %}{% endwith %}{% endif %}
+        {% endwith %}
+        <div class="category-overlay">
+          <div class="eyebrow">{{ category.get_product_type_display }}</div>
+          <h3>{{ category.name }}</h3>
+          <span class="btn-line on-dark">Explore <i class='bx bx-right-arrow-alt'></i></span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if showcase_panels %}
+<!-- HORIZONTAL FEATURE SHOWCASE -->
+{# Merged from landing-page-v1's "05 — HORIZONTAL FEATURES" h-scroll panels. #}
+{# GSAP-pinned scrollytelling isn't reproduced (pure motion, no data); this #}
+{# scrolls natively instead so HomeShowcasePanel's image+copy rows still #}
+{# read correctly without bespoke pin-and-translate JS. Purely admin content #}
+{# with no real-model fallback, so the whole section is skipped when empty. #}
+<section class="showcase-section">
+  <div class="showcase-scroll" id="showcaseScroll">
+    {% for panel in showcase_panels %}
+    <div class="showcase-panel">
+      <div class="showcase-panel-media"><img src="{{ panel.image.url }}" alt="{{ panel.title }}" /></div>
+      <div class="showcase-panel-content" data-reveal>
+        <p class="showcase-panel-index">{{ forloop.counter0|stringformat:"02d" }} / {{ showcase_panels|length|stringformat:"02d" }}</p>
+        <h3 class="showcase-panel-title">{{ panel.title }}</h3>
+        <p class="showcase-panel-desc">{{ panel.body }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if showcase_panels|length > 1 %}
+  <div class="showcase-nav">
+    <button class="showcase-arrow" id="showcasePrev" aria-label="Previous feature"><i class='bx bx-left-arrow-alt'></i></button>
+    <button class="showcase-arrow" id="showcaseNext" aria-label="Next feature"><i class='bx bx-right-arrow-alt'></i></button>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if flagship %}
+<!-- HIGHLIGHT: FLAGSHIP -->
+<section class="section highlight-split">
+  <div class="container-x">
+    <div class="split-layout">
+      <div class="split-text" data-reveal>
+        <div class="eyebrow">Flagship</div>
+        <h2 class="section-title">{{ flagship.name }}</h2>
+        <p class="body-l" style="margin:20px 0 28px">{{ flagship.description }}</p>
+        {# The reference hardcoded Range/Power/Weight/Top Speed. These now come #}
+        {# from the product's own ProductSpec rows through the same `get_spec` #}
+        {# filter the product card uses — no duplicated lookup logic (rule 4). #}
+        <div class="highlight-specs">
+          {% with range_spec=flagship|get_spec:"Range" power_spec=flagship|get_spec:"Power" weight_spec=flagship|get_spec:"Weight" top_speed_spec=flagship|get_spec:"Top Speed" %}
+          {% if range_spec %}<div><strong>{{ range_spec }}</strong><span>Range</span></div>{% endif %}
+          {% if power_spec %}<div><strong>{{ power_spec }}</strong><span>Power</span></div>{% endif %}
+          {% if weight_spec %}<div><strong>{{ weight_spec }}</strong><span>Weight</span></div>{% endif %}
+          {% if top_speed_spec %}<div><strong>{{ top_speed_spec }}</strong><span>Top Speed</span></div>{% endif %}
+          {% endwith %}
+        </div>
+        <div style="display:flex;gap:12px;margin-top:30px">
+          <a href="{% url 'catalog:product_detail' slug=flagship.slug %}" class="btn-volt">Discover {{ flagship.name }} <i class='bx bx-right-arrow-alt'></i></a>
+          <a href="{% url 'catalog:configurator_model' slug=flagship.slug %}" class="btn-outline">Build Yours</a>
+        </div>
+      </div>
+      <div class="split-visual" data-reveal-img>
+        {% with image=flagship.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ flagship.name }}" />{% endif %}{% endwith %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if carousel_slides %}
+<!-- DETAIL CAROUSEL -->
+{# Merged from landing-page-v1's "09 — CAROUSEL". Real HomeCarouselSlide #}
+{# rows when the admin has uploaded any; otherwise home_view falls back to #}
+{# the flagship's own gallery images so a fresh install isn't an empty rail. #}
+<section class="section carousel-section">
+  <div class="container-x">
+    <div class="carousel-head">
+      <div data-reveal>
+        <div class="eyebrow">Every Angle</div>
+        <h2 class="section-title">{% if flagship %}The {{ flagship.name }}, in Detail.{% else %}Every Angle{% endif %}</h2>
+      </div>
+      <div class="carousel-nav">
+        <p class="carousel-count"><span class="cur" id="cCur">01</span> / <span id="cTotal">{{ carousel_slides|length|stringformat:"02d" }}</span></p>
+        <div class="carousel-arrows">
+          <button class="c-arrow" id="cPrev" aria-label="Previous image"><i class='bx bx-left-arrow-alt'></i></button>
+          <button class="c-arrow" id="cNext" aria-label="Next image"><i class='bx bx-right-arrow-alt'></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-stage" id="carouselStage">
+      {% for slide in carousel_slides %}
+      <div class="c-slide{% if forloop.first %} is-active{% endif %}">
+        <img src="{{ slide.image.url }}" alt="{{ slide.caption }}" />
+        {% if slide.caption %}<p class="c-slide-caption">{{ slide.caption }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="carousel-dots" id="carouselDots">
+      {% for slide in carousel_slides %}
+      <button class="c-dot{% if forloop.first %} is-active{% endif %}" data-idx="{{ forloop.counter0 }}" aria-label="Go to slide {{ forloop.counter }}"></button>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ACCESSORIES PREVIEW -->
+<section class="section on-charcoal">
+  <div class="container-x">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-reveal>Gear Up</div>
+        <h2 class="section-title" data-reveal>Essential Accessories</h2>
+      </div>
+      <a href="{% url 'catalog:accessories' %}" class="btn-line on-dark" data-reveal>Shop All Accessories <i class='bx bx-right-arrow-alt'></i></a>
+    </div>
+    <div class="product-grid" id="accessoryPreview">
+      {% for product in featured_accessories %}{% include "catalog/_product_card.html" %}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- TEST RIDE CTA -->
+<section class="section on-dark">
+  <div class="container-x">
+    <div class="cta-block" data-reveal>
+      <div class="eyebrow">{{ home.testride_eyebrow }}</div>
+      <h2 class="section-title">{{ home.testride_title }}</h2>
+      <p class="body-l on-dark" style="max-width:560px;margin:20px auto 30px">{{ testride_body }}</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <a href="{% url 'bookings:test_ride' %}" class="btn-volt btn-lg"><i class='bx bx-calendar'></i>Book a Test Ride</a>
+        <a href="{% url 'dealers:dealer_list' %}" class="btn-ghost btn-lg"><i class='bx bx-map'></i>Find a Dealer</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if testimonials %}
+<!-- TESTIMONIALS -->
+<section class="section">
+  <div class="container-x">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-reveal>Rider Stories</div>
+        <h2 class="section-title" data-reveal>What Riders Say</h2>
+      </div>
+    </div>
+    {# The reference built these from a hardcoded 3-review JS array. These are #}
+    {# real approved 5-star Review rows; the star markup goes through the same #}
+    {# shared `star_rating` tag the reference's starRating() helper mirrors. #}
+    <div class="testimonial-grid" id="testimonialGrid">
+      {% for review in testimonials %}
+      <div class="testimonial-card" data-reveal>
+        {% star_rating review.rating "1.1rem" %}
+        <p>"{{ review.body }}"</p>
+        <div class="testimonial-author"><strong>{{ review.author_name }}</strong><span>{{ review.product.name }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- CINEMATIC BANNER -->
+{# Merged from landing-page-v1's "08 — CINEMATIC VIDEO". Plays #}
+{# HomePageContent.cine_video muted-loop when the admin has uploaded one; #}
+{# otherwise falls back to cine_image (or the flagship's photo) as a static #}
+{# banner, same hero_image-style fallback used throughout this page. #}
+<section class="cine-section">
+  <div class="cine-media" data-reveal-img>
+    {% if home.cine_video %}
+    <video id="cineVideo" autoplay muted loop playsinline poster="{% if home.cine_image %}{{ home.cine_image.url }}{% endif %}">
+      <source src="{{ home.cine_video.url }}" type="video/mp4" />
+    </video>
+    {% elif home.cine_image %}<img src="{{ home.cine_image.url }}" alt="" />
+    {% elif flagship %}{% with image=flagship.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="" />{% endif %}{% endwith %}{% endif %}
+  </div>
+  <div class="cine-content">
+    <h2 class="display-title" data-reveal><span>{{ home.cine_title_line1 }}</span><br><span>{{ home.cine_title_line2 }}</span></h2>
+    {% if home.cine_video %}
+    <div class="cine-controls">
+      <button class="cine-btn" id="cinePlay" aria-label="Play or pause film"><i class='bx bx-pause'></i></button>
+      <button class="cine-btn" id="cineSound" aria-label="Toggle sound"><i class='bx bx-volume-mute'></i></button>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- COMPARE CTA -->
+<section class="section" style="background:var(--bone-2)">
+  <div class="container-x">
+    <div class="split-layout">
+      <div class="split-text" data-reveal>
+        <div class="eyebrow">{{ home.compare_eyebrow }}</div>
+        <h2 class="section-title">{{ home.compare_title }}</h2>
+        <p class="body-l" style="margin:20px 0 28px">{{ home.compare_body }}</p>
+        <a href="{% url 'catalog:compare' %}" class="btn-dark"><i class='bx bx-git-compare'></i>Start Comparing</a>
+      </div>
+      <div class="split-visual" data-reveal-img>
+        {% if flagship %}{% with image=flagship.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="Compare" />{% endif %}{% endwith %}{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+{# Merged from landing-page-v1's "11 — FINAL CTA" closing banner. Real #}
+{# copy (HomePageContent.final_cta_*) over a real image, same hero_image- #}
+{# style fallback to the flagship's own photo when the admin hasn't set one. #}
+<section class="final-cta">
+  <div class="final-media" data-reveal-img>
+    {% if home.final_cta_image %}<img src="{{ home.final_cta_image.url }}" alt="" />
+    {% elif flagship %}{% with image=flagship.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="" />{% endif %}{% endwith %}{% endif %}
+  </div>
+  <div class="final-content">
+    <h2 class="display-title" data-reveal><span>{{ home.final_cta_title_line1 }}</span><br><span>{{ home.final_cta_title_line2 }}</span></h2>
+    <p class="body-l on-dark" data-reveal>{{ home.final_cta_body }}</p>
+    <div class="final-actions" data-reveal>
+      <a href="{% url 'catalog:shop' %}" class="btn-volt"><i class='bx bx-store'></i>Shop Motorcycles</a>
+      <a href="{% url 'bookings:test_ride' %}" class="btn-ghost"><i class='bx bx-calendar'></i>Book a Test Ride</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Detail carousel (prev/next/dots) -- mirrors the reference's carousel
+  // controller, but reads slide count from the DOM instead of a hardcoded
+  // array since slides now come from HomeCarouselSlide/flagship gallery.
+  (function () {
+    var stage = document.getElementById('carouselStage');
+    if (!stage) return;
+    var slides = stage.querySelectorAll('.c-slide');
+    var dots = document.querySelectorAll('#carouselDots .c-dot');
+    var cur = document.getElementById('cCur');
+    var idx = 0;
+
+    function show(i) {
+      idx = (i + slides.length) % slides.length;
+      slides.forEach(function (s, n) { s.classList.toggle('is-active', n === idx); });
+      dots.forEach(function (d, n) { d.classList.toggle('is-active', n === idx); });
+      if (cur) cur.textContent = String(idx + 1).padStart(2, '0');
+    }
+
+    var prev = document.getElementById('cPrev');
+    var next = document.getElementById('cNext');
+    if (prev) prev.addEventListener('click', function () { show(idx - 1); });
+    if (next) next.addEventListener('click', function () { show(idx + 1); });
+    dots.forEach(function (d, n) { d.addEventListener('click', function () { show(n); }); });
+  })();
+
+  // Horizontal feature showcase -- native scroll-snap, arrows just step
+  // one panel width at a time rather than pinning the whole viewport.
+  (function () {
+    var scroller = document.getElementById('showcaseScroll');
+    if (!scroller) return;
+    var prev = document.getElementById('showcasePrev');
+    var next = document.getElementById('showcaseNext');
+    function step(dir) { scroller.scrollBy({ left: dir * scroller.clientWidth, behavior: 'smooth' }); }
+    if (prev) prev.addEventListener('click', function () { step(-1); });
+    if (next) next.addEventListener('click', function () { step(1); });
+  })();
+
+  // Cinematic banner play/pause + mute toggle for the optional cine_video.
+  (function () {
+    var video = document.getElementById('cineVideo');
+    var playBtn = document.getElementById('cinePlay');
+    var soundBtn = document.getElementById('cineSound');
+    if (!video) return;
+    if (playBtn) playBtn.addEventListener('click', function () {
+      if (video.paused) { video.play(); playBtn.innerHTML = "<i class='bx bx-pause'></i>"; }
+      else { video.pause(); playBtn.innerHTML = "<i class='bx bx-play'></i>"; }
+    });
+    if (soundBtn) soundBtn.addEventListener('click', function () {
+      video.muted = !video.muted;
+      soundBtn.innerHTML = video.muted ? "<i class='bx bx-volume-mute'></i>" : "<i class='bx bx-volume-full'></i>";
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Find a Dealer — {{ site_name }}{% endblock %}
+{% block meta_description %}Find a {{ site_name }} dealer or showroom near you, in any wilaya.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Showrooms</div>
+    <h1 class="section-title">Find a Dealer</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Dealers</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <form method="get" action="{% url 'dealers:dealer_list' %}" class="dealer-search">
+      <div style="position:relative;max-width:500px">
+        <input type="text" class="form-control" id="dealerSearch" name="q" value="{{ form.q.value|default:'' }}" placeholder="Search by city, wilaya or number..." style="padding-left:44px;font-size:1rem">
+        <i class="bx bx-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.2rem;color:#999"></i>
+      </div>
+    </form>
+    <div class="dealers-layout">
+      <div class="dealer-list" id="dealerList">
+        {% if dealers %}
+        {% for dealer in dealers %}
+        <div class="dealer-card">
+          <h4>{{ dealer.name }}</h4>
+          {# dealer.address is already a complete "street, postal code, city, wilaya" line -- see dealers/views.py's note; appending .city/.get_wilaya_display here would duplicate them. #}
+          <div class="dealer-city"><i class="bx bx-map-pin"></i> {{ dealer.address }}</div>
+          <div class="dealer-info">
+            <div><i class="bx bx-phone"></i>{{ dealer.phone }}</div>
+            <div><i class="bx bx-time"></i>{{ dealer.hours }}</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <a href="{% url 'bookings:test_ride' %}" class="btn-volt btn-sm"><i class="bx bx-calendar"></i>Test Ride</a>
+            <a href="{{ dealer.maps_url }}" target="_blank" class="btn-outline btn-sm"><i class="bx bx-directions"></i>Directions</a>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+          <i class="bx bx-map-alt"></i>
+          <h3>No dealers found</h3>
+          <p>Try a different search term.</p>
+        </div>
+        {% endif %}
+      </div>
+      <div class="dealer-map" id="dealerMap">
+        <img src="https://images.pexels.com/photos/2598680/pexels-photo-2598680.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Map" />
+        <div class="dealer-map-overlay">
+          <div>
+            <i class="bx bx-map" style="font-size:3rem;margin-bottom:10px"></i>
+            <h3 style="font-weight:800">{{ total_dealer_count }} Dealer{{ total_dealer_count|pluralize }} Across Algeria</h3>
+            <p style="color:#c8c8c8;font-size:.9rem">Select a dealer to see location</p>
+          </div>
+        </div>
+        <div id="mapPins">
+          {% for dealer in dealers %}
+          <div class="dealer-map-pin" style="left:{{ dealer.map_x|floatformat:2 }}%;top:{{ dealer.map_y|floatformat:2 }}%" title="{{ dealer.name }}"></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Ports the static build's `selectDealer()` — a pure visual highlight,
+  // no state change, so it stays a plain delegated click listener rather
+  // than a POST/redirect.
+  document.getElementById('dealerList').addEventListener('click', function (e) {
+    var card = e.target.closest('.dealer-card');
+    if (!card) return;
+    document.querySelectorAll('.dealer-card').forEach(function (c) { c.style.borderColor = ''; });
+    card.style.borderColor = 'var(--ink)';
+  });
+</script>
+{% endblock %}

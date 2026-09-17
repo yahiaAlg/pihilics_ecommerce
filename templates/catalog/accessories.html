@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Shop Accessories — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="{% url 'content:home' %}">Home</a><i class='bx bx-chevron-right'></i><span>Accessories</span></div>
+    <h1>Gear &amp; Accessories</h1>
+    <p>{{ result_count }} item{{ result_count|pluralize }} to complete your ride.</p>
+  </div>
+</section>
+
+<section class="shop-layout container">
+  <button type="button" class="btn-outline btn-sm filter-toggle-mobile" onclick="document.getElementById('filterSidebar').classList.toggle('is-open')">
+    <i class='bx bx-filter-alt'></i> Filters
+  </button>
+
+  <form method="get" action="{% url 'catalog:accessories' %}" id="filterSidebar" class="filter-sidebar">
+    <div class="filter-sidebar-header">
+      <h5>Filters</h5>
+      <a href="{% url 'catalog:accessories' %}" class="filter-clear-link">Clear All</a>
+    </div>
+
+    <div class="filter-group">
+      <h6>Category</h6>
+      {% for category in form.fields.category.queryset %}
+      <label class="filter-option">
+        <input type="checkbox" name="category" value="{{ category.slug }}" onchange="this.form.submit()"
+          {% if form.category.value and category.slug in form.category.value %}checked{% endif %}>
+        {{ category.name }}
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="filter-group">
+      <h6>Max Price: <span id="maxPriceLabel">{{ form.max_price.value|default:90000|price }}</span></h6>
+      <input type="range" name="max_price" min="0" max="90000" step="1000"
+        value="{{ form.max_price.value|default:90000 }}"
+        oninput="document.getElementById('maxPriceLabel').textContent = '\u20ac' + Number(this.value).toLocaleString('en-US')"
+        onchange="this.form.submit()">
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-option">
+        <input type="checkbox" name="in_stock_only" value="on" onchange="this.form.submit()" {% if form.in_stock_only.value %}checked{% endif %}>
+        In Stock Only
+      </label>
+    </div>
+  </form>
+
+  <div class="shop-results">
+    <div class="shop-toolbar">
+      <span class="shop-result-count">{{ result_count }} result{{ result_count|pluralize }}</span>
+      <div class="shop-toolbar-actions">
+        <select name="sort" form="filterSidebar" onchange="this.form.submit()">
+          {% for value, label in form.fields.sort.choices %}
+          <option value="{{ value }}" {% if form.sort.value|default:"featured" == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {% if products %}
+    <div class="product-grid">
+      {% for product in products %}{% include "catalog/_product_card.html" %}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class='bx bx-search-alt'></i>
+      <h4>No accessories match those filters</h4>
+      <p>Try widening your price range or clearing a filter.</p>
+      <a href="{% url 'catalog:accessories' %}" class="btn-volt">Clear All Filters</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

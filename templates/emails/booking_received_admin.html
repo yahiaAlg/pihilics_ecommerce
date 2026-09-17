@@ -1,0 +1,18 @@
+{% extends "emails/base_email.html" %}
+
+{% block eyebrow_text %}New {{ booking_label }}{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 20px;font-size:22px;font-weight:800;">{{ booking_label }} — {{ booking.dealer.name }}</p>
+
+{% include "emails/_info_row.html" with label="Customer" value=first_name|add:" "|add:last_name %}
+{% include "emails/_info_row.html" with label="Email" value=email %}
+{% include "emails/_info_row.html" with label="Phone" value=phone %}
+{% include "emails/_info_row.html" with label="Date" value=booking.date %}
+{% include "emails/_info_row.html" with label="Time" value=booking.get_time_slot_display %}
+{% include "emails/_info_row.html" with label="Vehicle" value=booking.product.name %}
+
+<p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#444;">
+  Confirm, cancel, or complete this request from the dealer booking queue.
+</p>
+{% endblock %}

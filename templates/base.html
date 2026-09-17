@@ -1,0 +1,174 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ site_name }}{% if site_tagline %} — {{ site_tagline }}{% endif %}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ site_tagline|default:"Electric bikes and motorcycles, delivered to all 58 wilayas." }}{% endblock %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav class="nav" id="siteNav">
+    <a href="{% url 'content:home' %}" class="nav-logo"><span class="dot"></span>{{ site_name }}</a>
+    <div class="nav-links">
+      <a href="{% url 'content:home' %}" class="{% if nav_active == 'home' %}active{% endif %}">Home</a>
+      <div class="nav-mega-wrap">
+        <span class="nav-link {% if nav_active == 'shop' %}active{% endif %}">Motorcycles <i class='bx bx-chevron-down'></i></span>
+        <div class="nav-mega">
+          <div>
+            <h6>By Category</h6>
+            <ul>
+              {% for cat in mega_menu_categories %}
+              <li><a href="{% url 'catalog:shop' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+              {% endfor %}
+              <li><a href="{% url 'catalog:shop' %}">View All</a></li>
+            </ul>
+          </div>
+          <div>
+            <h6>Featured</h6>
+            <ul>
+              {% for product in mega_menu_featured_products %}
+              <li><a href="{% url 'catalog:product_detail' slug=product.slug %}">{{ product.name }}</a></li>
+              {% endfor %}
+              <li><a href="{% url 'catalog:configurator' %}">Build Your Own</a></li>
+            </ul>
+          </div>
+          <div>
+            <h6>Tools</h6>
+            <ul>
+              <li><a href="{% url 'catalog:compare' %}">Compare Models</a></li>
+              <li><a href="{% url 'bookings:test_ride' %}">Book a Test Ride</a></li>
+              <li><a href="{% url 'dealers:dealer_list' %}">Find a Dealer</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'catalog:accessories' %}" class="{% if nav_active == 'accessories' %}active{% endif %}">Accessories</a>
+      <a href="{% url 'catalog:configurator' %}" class="{% if nav_active == 'configurator' %}active{% endif %}">Configurator</a>
+      <a href="{% url 'dealers:dealer_list' %}" class="{% if nav_active == 'dealers' %}active{% endif %}">Dealers</a>
+      <a href="{% url 'content:support' %}" class="{% if nav_active == 'support' %}active{% endif %}">Support</a>
+    </div>
+    <div class="nav-right">
+      <a href="{% url 'catalog:search' %}" class="icon-link" aria-label="Search"><i class='bx bx-search'></i></a>
+      <a href="{% url 'accounts:account' %}" class="icon-link" aria-label="Account"><i class='bx bx-user'></i></a>
+      <a href="{% url 'catalog:wishlist' %}" class="icon-link" aria-label="Wishlist"><i class='bx bx-heart'></i><span class="badge" data-wish-count{% if not header_wishlist_count %} style="display:none"{% endif %}>{{ header_wishlist_count }}</span></a>
+      <a href="{% url 'catalog:compare' %}" class="icon-link" aria-label="Compare"><i class='bx bx-git-compare'></i><span class="badge" data-compare-count{% if not header_compare_count %} style="display:none"{% endif %}>{{ header_compare_count }}</span></a>
+      <a href="{% url 'cart:cart_detail' %}" class="icon-link cart-link" aria-label="Cart"><i class='bx bx-cart'></i><span class="badge" data-cart-count{% if not header_cart_count %} style="display:none"{% endif %}>{{ header_cart_count }}</span></a>
+      <a href="{% url 'catalog:configurator' %}" class="nav-cta"><i class='bx bx-plus-medical'></i>Build</a>
+      <button class="nav-burger" id="navBurger"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="{% url 'content:home' %}">Home</a>
+    <a href="{% url 'catalog:shop' %}">Motorcycles</a>
+    <a href="{% url 'catalog:accessories' %}">Accessories</a>
+    <a href="{% url 'catalog:configurator' %}">Configurator</a>
+    <a href="{% url 'programs:financing' %}">Financing</a>
+    <a href="{% url 'catalog:compare' %}">Compare</a>
+    <a href="{% url 'bookings:test_ride' %}">Test Ride</a>
+    <a href="{% url 'dealers:dealer_list' %}">Dealers</a>
+    <a href="{% url 'content:about' %}">About</a>
+    <a href="{% url 'content:story_list' %}">Stories</a>
+    <a href="{% url 'content:support' %}">Support</a>
+    <a href="{% url 'support:contact' %}">Contact</a>
+    <a href="{% url 'accounts:account' %}">Account</a>
+    <div class="mm-foot">
+      <a href="{% url 'cart:cart_detail' %}" class="btn-volt btn-sm">Cart</a>
+      <a href="{% url 'catalog:wishlist' %}" class="btn-ghost btn-sm">Wishlist</a>
+    </div>
+  </div>
+
+  <div class="toast-container">
+    {% for message in messages %}
+    <div class="toast {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% endif %}">
+      <i class="bx {% if message.tags == 'success' %}bx-check-circle{% elif message.tags == 'error' %}bx-x-circle{% else %}bx-check{% endif %}"></i>
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <div class="container-x">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="{% url 'content:home' %}" class="nav-logo"><span class="dot"></span>{{ site_name }}</a>
+          <p>{{ site_tagline|default:"Electric bikes and motorcycles, delivered to all 58 wilayas." }}</p>
+          <div class="footer-social">
+            <a href="{{ company.instagram_url|default:'#' }}" aria-label="Instagram"><i class='bx bxl-instagram'></i></a>
+            <a href="{{ company.youtube_url|default:'#' }}" aria-label="YouTube"><i class='bx bxl-youtube'></i></a>
+            <a href="{{ company.facebook_url|default:'#' }}" aria-label="Facebook"><i class='bx bxl-facebook'></i></a>
+            <a href="{{ company.twitter_url|default:'#' }}" aria-label="X"><i class='bx bxl-twitter'></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h5>Motorcycles</h5>
+          <ul>
+            {% for cat in mega_menu_categories %}
+            <li><a href="{% url 'catalog:shop' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+            {% endfor %}
+            <li><a href="{% url 'catalog:configurator' %}">Configurator</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Shop</h5>
+          <ul>
+            <li><a href="{% url 'catalog:accessories' %}">Accessories</a></li>
+            {% for cat in footer_accessory_categories %}
+            <li><a href="{% url 'catalog:accessories' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+            {% endfor %}
+            <li><a href="{% url 'programs:financing' %}">Financing</a></li>
+            <li><a href="{% url 'programs:insurance' %}">Insurance</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Company</h5>
+          <ul>
+            <li><a href="{% url 'content:about' %}">About Us</a></li>
+            <li><a href="{% url 'content:story_list' %}">Stories</a></li>
+            <li><a href="{% url 'dealers:dealer_list' %}">Find a Dealer</a></li>
+            <li><a href="{% url 'support:contact' %}">Contact</a></li>
+            <li><a href="{% url 'bookings:service_booking' %}">Book a Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Newsletter</h5>
+          <p style="color:#8c8c8c;font-size:.9rem;margin-bottom:14px">Get product updates and early access drops.</p>
+          {# functional spec 5.3: "no actual subscription is persisted anywhere in the current build" — #}
+          {# the one static-build interaction with no backend model/view to wire to (see Step 1 notes); #}
+          {# kept client-only rather than inventing a Newsletter app the spec explicitly says doesn't exist. #}
+          <form class="newsletter-form" onsubmit="showToast('Subscribed!', 'success'); return false">
+            {% csrf_token %}
+            <input type="email" name="email" placeholder="your@email.com" required>
+            <button type="submit"><i class='bx bx-right-arrow-alt'></i></button>
+          </form>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {% now "Y" %} {{ company.legal_name|default:site_name }}. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="{% url 'content:privacy' %}">Privacy</a>
+          <a href="{% url 'content:terms' %}">Terms</a>
+          <a href="{% url 'support:contact' %}">Contact</a>
+          <a href="{% url 'accounts:login' %}">Sign In</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="{% static 'js/base.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

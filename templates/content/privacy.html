@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — {{ site_name }}{% endblock %}
+{% block meta_description %}{{ site_name }} Motors privacy policy.{% endblock %}
+
+{% block extra_head %}
+{% comment %} Copied VERBATIM from privacy.html's own <head> <style> block -- the
+   .legal-content / .legal-toc rules exist only on that page, not in the
+   frozen theme.css/pages.css. Same treatment as about.html and stories.html. {% endcomment %}
+<style>
+    .legal-content { max-width: 760px; margin: 0 auto; }
+    .legal-content h2 { font-size: 1.4rem; font-weight: 800; margin: 36px 0 14px; }
+    .legal-content h3 { font-size: 1.1rem; font-weight: 700; margin: 24px 0 10px; }
+    .legal-content p { color: #555; line-height: 1.7; margin-bottom: 14px; }
+    .legal-content ul { padding-left: 20px; margin-bottom: 14px; }
+    .legal-content ul li { color: #555; line-height: 1.7; margin-bottom: 6px; }
+    .legal-content .last-updated { font-size: .85rem; color: #999; margin-bottom: 30px; }
+    .legal-toc { background: var(--white); border: 1px solid var(--line-light); padding: 24px; margin-bottom: 30px; }
+    .legal-toc h4 { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #999; margin-bottom: 12px; }
+    .legal-toc ul { list-style: none; padding: 0; }
+    .legal-toc ul li { margin-bottom: 8px; }
+    .legal-toc ul li a { font-size: .9rem; color: var(--ink); font-weight: 600; }
+    .legal-toc ul li a:hover { color: var(--volt-dim); }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="container-x">
+      <div class="eyebrow">Legal</div>
+      <h1 class="section-title">{{ document.title }}</h1>
+      <div class="breadcrumb">
+        <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+        <span>{{ document.title }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="container-x">
+      <div class="legal-content">
+        <p class="last-updated">Last updated: {{ document.last_updated|date:"F j, Y" }}</p>
+        {{ document_body|safe }}
+      </div>
+    </div>
+  </section>
+{% endblock %}

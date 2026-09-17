@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Configurator — Build Your {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Build Your Own</div>
+    <h1 class="section-title">Configurator</h1>
+    <div class="breadcrumb"><a href="{% url 'content:home' %}">Home</a><span class="sep">/</span><span>Configurator</span></div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="configurator">
+      <div>
+        <div class="config-step">
+          <h3><span class="step-num">1</span>Choose Your Model</h3>
+          <p style="color:#777;font-size:.88rem">Select a base motorcycle to start configuring.</p>
+          <div class="config-options">
+            {% for model in motorcycles %}
+            <a href="{% url 'catalog:configurator_model' slug=model.slug %}" class="config-option{% if selected.id == model.id %} active{% endif %}" style="display:block;text-decoration:none;color:inherit">
+              <h6>{{ model.name }}</h6>
+              <p>{{ model.category.name }} &bull; {{ model|get_spec:"Range" }} &bull; {{ model|get_spec:"Power" }}</p>
+              <div class="opt-price">{{ model.price|price }}</div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if selected %}
+        <form method="post" action="{% url 'cart:add_to_cart' %}" id="configForm" data-add-to-cart-form>
+          {% csrf_token %}
+          <input type="hidden" name="product_id" value="{{ selected.id }}">
+          <input type="hidden" name="quantity" value="1">
+
+          <div class="config-step">
+            <h3><span class="step-num">2</span>Choose Your Color</h3>
+            <p style="color:#777;font-size:.88rem">Pick the color that matches your style.</p>
+            <div class="config-options" id="colorOptions">
+              {% for color in selected.colors.all %}
+              <label style="display:contents">
+                <input type="radio" name="color" value="{{ color.name }}" {% if forloop.first %}checked{% endif %} hidden class="rt-input">
+                <span class="config-option{% if forloop.first %} active{% endif %}" data-swatch>
+                  <div style="width:40px;height:40px;border-radius:50%;background:{{ color.hex_value }};margin-bottom:8px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line-light)"></div>
+                  <h6>{{ color.name }}</h6>
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% for group in selected.variant_groups.all %}
+          <div class="config-step">
+            <h3><span class="step-num">{{ forloop.counter|add:2 }}</span>{{ group.name }}</h3>
+            <p style="color:#777;font-size:.88rem">
+              {% if group.name == "Battery" %}More range or hot-swap convenience?
+              {% elif group.name == "Suspension" %}Tune for your terrain.
+              {% elif group.name == "Wheels" %}Spoked, tubeless, or track-ready.
+              {% else %}Choose an option.{% endif %}
+            </p>
+            <div class="config-options">
+              {% for option in group.options.all %}
+              <label style="display:contents">
+                <input type="radio" name="vg_{{ group.id }}" value="{{ option.id }}" data-upgrade-group {% if forloop.first %}checked{% endif %} hidden class="rt-input">
+                <span class="config-option{% if forloop.first %} active{% endif %}" data-swatch>
+                  <h6>{{ option.label }}</h6>
+                  <div class="opt-price">{% if option.price_delta %}+{{ option.price_delta|price }}{% else %}Included{% endif %}</div>
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <div style="margin-top:10px;display:flex;gap:10px">
+            <button type="submit" name="next" value="{% url 'cart:cart_detail' %}" class="btn-volt btn-block"><i class='bx bx-cart'></i>Add to Cart</button>
+            <button type="submit" name="next" value="{% url 'orders:checkout_information' %}" class="btn-ghost btn-block">Buy Now</button>
+          </div>
+        </form>
+
+        {% if recommended_accessories %}
+        <div class="config-step">
+          <h3><span class="step-num">6</span>Accessories &amp; Packages</h3>
+          <p style="color:#777;font-size:.88rem">Add protection, charging, and gear — each adds its own line to your cart.</p>
+          <div class="product-grid">
+            {% for product in recommended_accessories %}{% include "catalog/_product_card.html" %}{% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% endif %}
+      </div>
+
+      <div>
+        <div class="config-summary">
+          <h3>Your Build</h3>
+          {% if selected %}
+          <div class="config-preview">{% with image=selected.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ selected.name }}" />{% endif %}{% endwith %}</div>
+          {% endif %}
+          <div id="summaryItems">
+            {% if not selected %}<div class="summary-item"><span>Select a model</span></div>{% endif %}
+          </div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span id="summaryTotal">{% if selected %}{{ selected.price|price }}{% else %}{{ 0|price }}{% endif %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if selected %}
+<script>
+  /* Configurator running total — the allowed AJAX case (spec 6.5). Recomputes
+     on every color/upgrade choice; the base model choice and the final
+     Add to Cart/Buy Now are real navigation/PRG, not part of this call. */
+  (function () {
+    var form = document.getElementById('configForm');
+    var itemsBox = document.getElementById('summaryItems');
+    var totalBox = document.getElementById('summaryTotal');
+
+    function refreshTotal() {
+      var params = new URLSearchParams();
+      params.set('product_id', '{{ selected.id }}');
+      form.querySelectorAll('input[type=radio][data-upgrade-group]:checked').forEach(function (input) {
+        params.append('option', input.value);
+      });
+      fetch('{% url "catalog:configurator_running_total" %}?' + params.toString())
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          itemsBox.innerHTML = data.line_items.map(function (item) {
+            return '<div class="summary-item"><span>' + item.label + '</span><span>' + '\u20ac' + Number(item.price).toLocaleString('en-US') + '</span></div>';
+          }).join('');
+          totalBox.textContent = '\u20ac' + Number(data.total).toLocaleString('en-US');
+        });
+    }
+
+    form.addEventListener('change', function (e) {
+      if (e.target.classList.contains('rt-input')) refreshTotal();
+    });
+    refreshTotal();
+  })();
+</script>
+{% endif %}
+{% endblock %}

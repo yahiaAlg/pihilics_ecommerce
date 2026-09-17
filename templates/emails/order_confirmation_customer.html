@@ -1,0 +1,56 @@
+{% extends "emails/base_email.html" %}
+{% load catalog_extras %}
+
+{% block eyebrow_text %}Order Confirmed{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Thanks, {{ order.contact_first_name }}.</p>
+<p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#444;">
+  We've received your order <strong>{{ order.reference }}</strong>. Here's a summary of what you ordered.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+  {% for item in items %}
+  <tr>
+    <td style="padding:9px 0;border-bottom:1px solid rgba(11,11,11,.08);font-size:13px;color:#0B0B0B;">
+      {{ item.quantity }} &times; {{ item.product_name_snapshot }}
+    </td>
+    <td style="padding:9px 0;border-bottom:1px solid rgba(11,11,11,.08);font-size:13px;color:#0B0B0B;font-weight:700;text-align:right;">
+      {{ item.line_total|price }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% include "emails/_info_row.html" with label="Subtotal" value=order.subtotal|price %}
+{% include "emails/_info_row.html" with label="Shipping" value=order.shipping_cost|price %}
+{% if order.discount_amount %}{% include "emails/_info_row.html" with label="Discount" value=order.discount_amount|price %}{% endif %}
+{% include "emails/_info_row.html" with label="TVA" value=order.vat_amount|price %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px;">
+  <tr>
+    <td style="padding:10px 0;font-size:15px;font-weight:800;">Total</td>
+    <td style="padding:10px 0;font-size:15px;font-weight:800;text-align:right;">{{ order.total|price }}</td>
+  </tr>
+</table>
+
+<div style="margin-top:24px;padding:18px 20px;background-color:#F4F3EF;">
+  {% if order.payment_method == "cib" %}
+  <p style="margin:0;font-size:13px;line-height:1.6;color:#0B0B0B;">
+    <strong>Payment — CIB / Edahabia Card:</strong> we'll email you a secure payment link shortly to complete
+    payment on your bank's own page. Nothing is charged until then.
+  </p>
+  {% else %}
+  <p style="margin:0;font-size:13px;line-height:1.6;color:#0B0B0B;">
+    <strong>Payment — Manual Order:</strong> our team will email you shortly with cash-on-delivery details, or
+    with our CCP / bank virement details if you'd rather pay by transfer.
+  </p>
+  {% endif %}
+</div>
+
+<p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#444;">
+  Delivering to {{ order.delivery_street }}, {{ order.delivery_city }}, {{ order.get_delivery_wilaya_display }}
+  via {{ order.get_delivery_method_display }}.
+</p>
+
+{% include "emails/_button.html" with url=track_url label="Track Your Order" %}
+{% endblock %}

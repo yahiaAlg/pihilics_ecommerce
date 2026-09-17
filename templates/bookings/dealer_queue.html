@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load catalog_extras bookings_extras %}
+{% block title %}Booking Queue — {{ site_name }}{% endblock %}
+{% block meta_description %}Dealer booking queue.{% endblock %}
+
+{% block content %}
+{# FLAGGED GAP: no static reference page exists for the dealer booking #}
+{# queue. The prototype was customer-facing only and had no dealer-staff #}
+{# surface at all, but BR-BK-03 ("visible immediately in the assigned #}
+{# dealer's booking queue") and BR-BK-04 (only that dealer's staff may #}
+{# confirm/cancel/complete) require it, and `dealer_booking_queue_view` #}
+{# already existed pointing at this template name. Composed entirely from #}
+{# classes the design system already defines -- .page-header, .order-card, #}
+{# .order-card-header, .order-card-footer, .order-status-badge, .empty-state #}
+{# -- reusing the Orders list page's card pattern, which is the closest #}
+{# documented analogue to "a queue of dated records with a status and #}
+{# actions". No new class, no new CSS, Boxicons only. #}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Dealer Staff</div>
+    <h1 class="section-title">Booking Queue</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'accounts:account' %}">Account</a><span class="sep">/</span>
+      <span>{{ dealer.name }}</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:20px">Test Rides</h3>
+    {% if not test_ride_bookings %}
+    <div class="empty-state">
+      <i class="bx bx-calendar"></i>
+      <h3>No test ride bookings</h3>
+      <p>New requests for {{ dealer.name }} will appear here.</p>
+    </div>
+    {% else %}
+    {% for booking in test_ride_bookings %}
+    <div class="order-card">
+      <div class="order-card-header">
+        <div>
+          <h4>{{ booking.product.name }}</h4>
+          <div class="order-date">{{ booking.date|date:"N j, Y" }} • {{ booking.get_time_slot_display }}</div>
+        </div>
+        <span class="order-status-badge {{ booking.status|booking_status_class }}">{{ booking.get_status_display }}</span>
+      </div>
+      <div class="order-items-list">
+        <div class="order-item-mini"><i class="bx bx-user"></i><span>{{ booking.first_name }} {{ booking.last_name }}</span></div>
+        <div class="order-item-mini"><i class="bx bx-envelope"></i><span>{{ booking.email }}</span></div>
+        <div class="order-item-mini"><i class="bx bx-phone"></i><span>{{ booking.phone }}</span></div>
+        <div class="order-item-mini"><i class="bx bx-id-card"></i><span>{{ booking.license_number }}</span></div>
+      </div>
+      <div class="order-card-footer">
+        {# Each action is its own tiny PRG form -- a real POST that redirects #}
+        {# back to this queue. No AJAX; the "minimal AJAX" whitelist does not #}
+        {# cover booking status changes. #}
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          {% if booking.status == "requested" %}
+          <form method="post" action="{% url 'bookings:booking_update_status' booking_type='test_ride' pk=booking.pk %}">
+            {% csrf_token %}<input type="hidden" name="status" value="confirmed">
+            <button type="submit" class="btn-volt btn-sm"><i class="bx bx-check"></i>Confirm</button>
+          </form>
+          {% endif %}
+          {% if booking.status == "confirmed" %}
+          <form method="post" action="{% url 'bookings:booking_update_status' booking_type='test_ride' pk=booking.pk %}">
+            {% csrf_token %}<input type="hidden" name="status" value="completed">
+            <button type="submit" class="btn-dark btn-sm"><i class="bx bx-check-double"></i>Complete</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'bookings:booking_update_status' booking_type='test_ride' pk=booking.pk %}">
+            {% csrf_token %}<input type="hidden" name="status" value="cancelled">
+            <button type="submit" class="btn-outline btn-sm"><i class="bx bx-x"></i>Cancel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <h3 style="font-size:1.1rem;font-weight:800;margin:40px 0 20px">Service Bookings</h3>
+    {% if not service_bookings %}
+    <div class="empty-state">
+      <i class="bx bx-wrench"></i>
+      <h3>No service bookings</h3>
+      <p>New requests for {{ dealer.name }} will appear here.</p>
+    </div>
+    {% else %}
+    {% for booking in service_bookings %}
+    <div class="order-card">
+      <div class="order-card-header">
+        <div>
+          <h4>{{ booking.product.name }} — {{ booking.service_tier.get_name_display }}</h4>
+          <div class="order-date">{{ booking.date|date:"N j, Y" }} • {{ booking.get_time_slot_display }}</div>
+        </div>
+        <span class="order-status-badge {{ booking.status|booking_status_class }}">{{ booking.get_status_display }}</span>
+      </div>
+      <div class="order-items-list">
+        <div class="order-item-mini"><i class="bx bx-user"></i><span>{{ booking.contact_first_name }} {{ booking.contact_last_name }}</span></div>
+        <div class="order-item-mini"><i class="bx bx-envelope"></i><span>{{ booking.contact_email }}</span></div>
+        <div class="order-item-mini"><i class="bx bx-phone"></i><span>{{ booking.contact_phone }}</span></div>
+      </div>
+      <div class="order-card-footer">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          {% if booking.status == "requested" %}
+          <form method="post" action="{% url 'bookings:booking_update_status' booking_type='service' pk=booking.pk %}">
+            {% csrf_token %}<input type="hidden" name="status" value="confirmed">
+            <button type="submit" class="btn-volt btn-sm"><i class="bx bx-check"></i>Confirm</button>
+          </form>
+          {% endif %}
+          {% if booking.status == "confirmed" %}
+          <form method="post" action="{% url 'bookings:booking_update_status' booking_type='service' pk=booking.pk %}">
+            {% csrf_token %}<input type="hidden" name="status" value="completed">
+            <button type="submit" class="btn-dark btn-sm"><i class="bx bx-check-double"></i>Complete</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'bookings:booking_update_status' booking_type='service' pk=booking.pk %}">
+            {% csrf_token %}<input type="hidden" name="status" value="cancelled">
+            <button type="submit" class="btn-outline btn-sm"><i class="bx bx-x"></i>Cancel</button>
+          </form>
+        </div>
+        <div class="total">{{ booking.service_tier.price|price }}</div>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

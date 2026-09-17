@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Contact — {{ site_name }}{% endblock %}
+{% block meta_description %}Get in touch with {{ site_name }} Motors — sales, support, press, and partnerships.{% endblock %}
+
+{% block extra_head %}
+{% comment %}
+Copied VERBATIM from contact.html's own <head> <style> block. None of
+.contact-layout / .contact-form / .contact-info-card / .dept-tabs /
+.dept-tab exist in theme.css or pages.css (verified by grep) -- same
+situation as about.html, stories.html and service.html: the reference
+carries them inline, both shared stylesheets are frozen, so the block
+rides along unaltered rather than being merged or rewritten.
+{% endcomment %}
+<style>
+  .contact-layout { display: grid; grid-template-columns: 1fr 400px; gap: 40px; align-items: flex-start; }
+  .contact-form { background: var(--white); border: 1px solid var(--line-light); padding: 40px; }
+  .contact-info-card { background: var(--ink); color: var(--white); padding: 30px; margin-bottom: 20px; }
+  .contact-info-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .contact-info-card h3 i { color: var(--volt); }
+  .contact-info-card .info-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; font-size: .88rem; color: #c8c8c8; }
+  .contact-info-card .info-item i { color: var(--volt); font-size: 1.1rem; flex-shrink: 0; }
+  .dept-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--line-light); }
+  .dept-tab { padding: 14px 22px; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid transparent; cursor: pointer; color: #999; transition: color .3s ease, border-color .3s ease; }
+  .dept-tab.active { color: var(--ink); border-color: var(--ink); }
+  @media (max-width: 860px) { .contact-layout { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Get in Touch</div>
+    <h1 class="section-title">Contact Us</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Contact</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="contact-layout">
+      <div class="contact-form">
+        {# FLAGGED DIVERGENCE: the reference's four tabs are General / Sales / #}
+        {# Support / Press, defaulting to General. `ContactDepartment` -- and #}
+        {# the form/model docstrings' own spec quote ("Sales, Support, Press, #}
+        {# Partnerships") -- has no "General" and instead has "Partnerships". #}
+        {# Rendered from the real enum: General is dropped, Partnerships is #}
+        {# added, and the default active tab is Support (the model field's #}
+        {# own default), not General, which has no equivalent to default to. #}
+        <div class="dept-tabs">
+          {% for value, label in form.fields.department.choices %}
+          <div class="dept-tab{% if form.department.value == value %} active{% endif %}" data-dept="{{ value }}">{{ label }}</div>
+          {% endfor %}
+        </div>
+
+        <form method="post" action="{% url 'support:contact' %}">
+          {% csrf_token %}
+          <input type="hidden" name="department" id="deptInput" value="{{ form.department.value|default:'support' }}">
+          {% if form.non_field_errors %}
+          <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+          {# The reference splits contact into First/Last Name; ContactMessage #}
+          {# has a single `name` field (also true of the embedded Help Center #}
+          {# form above). Kept as one field rather than concatenating two #}
+          {# inputs into it, which would silently reformat whatever the visitor #}
+          {# typed (e.g. dropping a middle name) before it ever reaches the model. #}
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" placeholder="John Doe" value="{{ form.name.value|default:'' }}" required>
+            {% for error in form.name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="john@email.com" value="{{ form.email.value|default:'' }}" required>
+            {% for error in form.email.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input type="text" name="subject" class="form-control" placeholder="How can we help?" value="{{ form.subject.value|default:'' }}" required>
+            {% for error in form.subject.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" placeholder="Tell us more..." required style="min-height:140px">{{ form.message.value|default:"" }}</textarea>
+            {% for error in form.message.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" required> <label style="font-size:.82rem">I agree to be contacted by {{ site_name }} Motors regarding my inquiry. See our <a href="{% url 'content:privacy' %}" style="text-decoration:underline;font-weight:700">Privacy Policy</a>.</label></label>
+          </div>
+          <button type="submit" class="btn-volt btn-lg btn-block"><i class="bx bx-send"></i>Send Message</button>
+        </form>
+      </div>
+
+      <div>
+        <div class="contact-info-card">
+          <h3><i class="bx bx-envelope"></i> Email Addresses</h3>
+          {# Department mailboxes kept literal -- flow-specific addresses, #}
+          {# not CompanyInfo.email, same call as testride@/service@ in Step 8. #}
+          <div class="info-item"><i class="bx bx-mail-send"></i> General: hello@pihilics.dz</div>
+          <div class="info-item"><i class="bx bx-mail-send"></i> Sales: sales@pihilics.dz</div>
+          <div class="info-item"><i class="bx bx-mail-send"></i> Support: support@pihilics.dz</div>
+          <div class="info-item"><i class="bx bx-mail-send"></i> Press: press@pihilics.dz</div>
+        </div>
+        <div class="contact-info-card">
+          <h3><i class="bx bx-phone"></i> Phone & Hours</h3>
+          <div class="info-item"><i class="bx bx-phone-call"></i> +49 30 555 0101</div>
+          <div class="info-item"><i class="bx bx-time"></i> Mon–Fri 9:00–18:00 CET</div>
+          <div class="info-item"><i class="bx bx-headphone"></i> 24/7 live chat online</div>
+        </div>
+        {# Company identity bound to CompanyInfo -- same call as Step 9's #}
+        {# terms.html/privacy.html. A stale VAT ID here is the same problem #}
+        {# it would be on a legal page. #}
+        <div class="contact-info-card">
+          <h3><i class="bx bx-map"></i> Headquarters</h3>
+          <div class="info-item"><i class="bx bx-building"></i> {{ company.legal_name }}</div>
+          <div class="info-item"><i class="bx bx-location-plus"></i> {{ company.street }}</div>
+          <div class="info-item"><i class="bx bx-location-plus"></i> {{ company.postal_code }} {{ company.city }}, {{ company.get_wilaya_display }}</div>
+          <div class="info-item"><i class="bx bx-id-card"></i> VAT: {{ company.vat_number }}</div>
+        </div>
+        <div class="contact-info-card">
+          <h3><i class="bx bx-share-alt"></i> Follow Us</h3>
+          <div style="display:flex;gap:14px;margin-top:10px">
+            <a href="#" style="width:38px;height:38px;border:1px solid var(--line-dark);display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--white);transition:border-color .3s ease,color .3s ease" onmouseover="this.style.borderColor='var(--volt)';this.style.color='var(--volt)'" onmouseout="this.style.borderColor='';this.style.color=''"><i class="bx bxl-instagram"></i></a>
+            <a href="#" style="width:38px;height:38px;border:1px solid var(--line-dark);display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--white);transition:border-color .3s ease,color .3s ease" onmouseover="this.style.borderColor='var(--volt)';this.style.color='var(--volt)'" onmouseout="this.style.borderColor='';this.style.color=''"><i class="bx bxl-youtube"></i></a>
+            <a href="#" style="width:38px;height:38px;border:1px solid var(--line-dark);display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--white);transition:border-color .3s ease,color .3s ease" onmouseover="this.style.borderColor='var(--volt)';this.style.color='var(--volt)'" onmouseout="this.style.borderColor='';this.style.color=''"><i class="bx bxl-facebook"></i></a>
+            <a href="#" style="width:38px;height:38px;border:1px solid var(--line-dark);display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--white);transition:border-color .3s ease,color .3s ease" onmouseover="this.style.borderColor='var(--volt)';this.style.color='var(--volt)'" onmouseout="this.style.borderColor='';this.style.color=''"><i class="bx bxl-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* Plain visual toggle, no server round-trip -- mirrors the reference's
+     selectDept() exactly, now also writing the chosen department's real
+     value into the hidden field so the tab actually submits. */
+  var deptInput = document.getElementById('deptInput');
+  document.querySelectorAll('.dept-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.dept-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      deptInput.value = tab.dataset.dept;
+    });
+  });
+</script>
+{% endblock %}

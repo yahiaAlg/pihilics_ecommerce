@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load catalog_extras bookings_extras %}
+{% block title %}Service Booked — {{ site_name }}{% endblock %}
+{% block meta_description %}Your {{ site_name }} service request has been received.{% endblock %}
+
+{% block extra_head %}
+{# Only the two .svc-* rules this page actually uses, copied verbatim from #}
+{# service.html's inline block (see service_booking.html for the full note #}
+{# on why these live inline rather than in the frozen stylesheets). #}
+<style>
+  .svc-form { background: var(--white); border: 1px solid var(--line-light); padding: 36px; }
+</style>
+{% endblock %}
+
+{% block content %}
+{# The static build's submitService() replaced .svc-form's innerHTML in #}
+{# place. Under PRG the POST redirects here, so that success block becomes a #}
+{# real page — same .success-icon, same heading sizes, same copy — now with #}
+{# the booking's real details, which the reference could not show. #}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Service &amp; Maintenance</div>
+    <h1 class="section-title">Book a Service</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'bookings:service_booking' %}">Service</a><span class="sep">/</span>
+      <span>Confirmation</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="svc-form" style="max-width:640px;margin:0 auto">
+      <div style="text-align:center;padding:40px 20px">
+        <div class="success-icon"><i class="bx bx-check"></i></div>
+        <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:12px">Service Booked!</h2>
+        <p style="color:#555;max-width:400px;margin:0 auto 24px">Your service appointment has been scheduled. We've sent a confirmation email with all the details.</p>
+        <div style="margin-bottom:24px"><span class="order-status-badge {{ booking.status|booking_status_class }}">{{ booking.get_status_display }}</span></div>
+        <div style="text-align:left;border-top:1px solid var(--line-light);padding-top:20px;margin-bottom:24px">
+          <div class="cart-summary-line"><span>Service Type</span><span>{{ booking.service_tier.get_name_display }}</span></div>
+          <div class="cart-summary-line"><span>Motorcycle</span><span>{{ booking.product.name }}</span></div>
+          <div class="cart-summary-line"><span>Dealer</span><span>{{ booking.dealer.name }}</span></div>
+          <div class="cart-summary-line"><span>Date</span><span>{{ booking.date|date:"N j, Y" }}</span></div>
+          <div class="cart-summary-line"><span>Time</span><span>{{ booking.get_time_slot_display }}</span></div>
+          <div class="cart-summary-total"><span>Price</span><span>{{ booking.service_tier.price|price }}</span></div>
+        </div>
+        <a href="{% url 'accounts:account' %}" class="btn-volt">Go to Account</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

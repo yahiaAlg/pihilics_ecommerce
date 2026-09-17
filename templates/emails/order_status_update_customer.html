@@ -1,0 +1,26 @@
+{% extends "emails/base_email.html" %}
+{% load catalog_extras %}
+
+{% block eyebrow_text %}Order Update{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Hi {{ order.contact_first_name }},</p>
+<p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#444;">
+  Your order <strong>{{ order.reference }}</strong> is now
+  <strong>{{ order.get_status_display }}</strong>.
+</p>
+
+{% if order.status == "shipped" %}
+<p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:#444;">Your order is on its way. Track its progress below.</p>
+{% elif order.status == "delivered" %}
+<p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:#444;">Your order has been delivered. We hope you enjoy it — thanks for riding with us.</p>
+{% elif order.status == "cancelled" %}
+<p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:#444;">Your order has been cancelled. If this wasn't expected, reach out and we'll help sort it out.</p>
+{% endif %}
+
+{% include "emails/_info_row.html" with label="Order" value=order.reference %}
+{% include "emails/_info_row.html" with label="Status" value=order.get_status_display %}
+{% include "emails/_info_row.html" with label="Total" value=order.total|price %}
+
+{% include "emails/_button.html" with url=track_url label="Track Your Order" %}
+{% endblock %}

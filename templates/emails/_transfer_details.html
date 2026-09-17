@@ -1,0 +1,30 @@
+{% load catalog_extras %}
+{# The sales account to transfer to. Shared by payment_instructions_customer #}
+{# and payment_rejected_customer so the details a customer needs in order to #}
+{# act are never one email away from the email telling them to act. Values #}
+{# come from core.CompanyInfo, never hardcoded — a wrong RIP here sends real #}
+{# money to the wrong account. #}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;background-color:#F4F3EF;border-left:4px solid #F2E900;">
+  <tr>
+    <td style="padding:20px 22px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:14px;">Transfer to</div>
+      {% if company.sales_account_holder %}
+      {% include "emails/_info_row.html" with label="Account holder" value=company.sales_account_holder %}
+      {% endif %}
+      {% if company.sales_bank_name %}
+      {% include "emails/_info_row.html" with label="Bank" value=company.sales_bank_name %}
+      {% endif %}
+      {% if company.sales_rip %}
+      {% include "emails/_info_row.html" with label="RIP (BaridiMob)" value=company.sales_rip %}
+      {% endif %}
+      {% if company.sales_ccp_number %}
+      {% include "emails/_info_row.html" with label="CCP" value=company.sales_ccp_number %}
+      {% endif %}
+      {% include "emails/_info_row.html" with label="Amount" value=order.total|price %}
+      {% include "emails/_info_row.html" with label="Reference to use" value=order.reference %}
+      {% if company.sales_payment_note %}
+      <p style="margin:14px 0 0;font-size:12px;line-height:1.6;color:#555;">{{ company.sales_payment_note }}</p>
+      {% endif %}
+    </td>
+  </tr>
+</table>

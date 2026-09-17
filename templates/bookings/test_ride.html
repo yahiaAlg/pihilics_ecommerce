@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Book a Test Ride — {{ site_name }}{% endblock %}
+{% block meta_description %}Book a free test ride of any {{ site_name }} electric motorcycle at a dealer near you.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Experience {{ site_name }}</div>
+    <h1 class="section-title">Book a Test Ride</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Test Ride</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="testride-layout">
+      <div class="testride-form">
+        <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:6px">Schedule Your Ride</h3>
+        <p style="color:#777;font-size:.88rem;margin-bottom:24px">Fill in your details and we'll confirm your test ride within 24 hours.</p>
+        <form method="post" action="{% url 'bookings:test_ride' %}">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+          <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+          <div class="form-group">
+            <label class="form-label">Select Motorcycle</label>
+            {# The static build's <optgroup label="Motorcycles"> wrapped a #}
+            {# hardcoded 7-model list. The real queryset is already filtered to #}
+            {# ProductType.MOTORCYCLE by TestRideBookingForm, so the optgroup is #}
+            {# kept (same DOM) with its members driven by the real catalog. #}
+            <select name="product" class="form-select" required>
+              <option value="">Choose a model...</option>
+              <optgroup label="Motorcycles">
+                {% for product in form.fields.product.queryset %}
+                <option value="{{ product.pk }}"{% if form.product.value|stringformat:"s" == product.pk|stringformat:"s" %} selected{% endif %}>{{ product.name }} — {{ product.price|price }}</option>
+                {% endfor %}
+              </optgroup>
+            </select>
+            {% for error in form.product.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Dealer</label>
+            <select name="dealer" class="form-select" required>
+              <option value="">Choose a dealer...</option>
+              {% for dealer in form.fields.dealer.queryset %}
+              <option value="{{ dealer.pk }}"{% if form.dealer.value|stringformat:"s" == dealer.pk|stringformat:"s" %} selected{% endif %}>{{ dealer.name }}</option>
+              {% endfor %}
+            </select>
+            {% for error in form.dealer.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Preferred Date</label>
+              <input type="date" name="date" class="form-control" id="trDate" value="{{ form.date.value|default:'' }}" required>
+              {% for error in form.date.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preferred Time</label>
+              {# FLAGGED DIVERGENCE: the mockup offers seven hourly slots #}
+              {# (9/10/11 AM, 1/2/3/4 PM). The backend's TIME_SLOT_CHOICES -- #}
+              {# which the DB's unique_confirmed_test_ride_slot constraint keys #}
+              {# off -- has only two: Morning and Afternoon. Rendering the #}
+              {# mockup's seven would submit values no model field accepts. #}
+              {# Rendered from the real choices; see TODO.md for the full note. #}
+              <select name="time_slot" class="form-select" required>
+                <option value="">Choose time...</option>
+                {% for value, label in form.fields.time_slot.choices %}{% if value %}
+                <option value="{{ value }}"{% if form.time_slot.value == value %} selected{% endif %}>{{ label }}</option>
+                {% endif %}{% endfor %}
+              </select>
+              {% for error in form.time_slot.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control" placeholder="John" value="{{ form.first_name.value|default:'' }}" required>
+              {% for error in form.first_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control" placeholder="Doe" value="{{ form.last_name.value|default:'' }}" required>
+              {% for error in form.last_name.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="john@email.com" value="{{ form.email.value|default:'' }}" required>
+            {% for error in form.email.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="phone" class="form-control" placeholder="+49 30 1234567" value="{{ form.phone.value|default:'' }}" required>
+            {% for error in form.phone.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Motorcycle Licence Number</label>
+            <input type="text" name="license_number" class="form-control" placeholder="Required for test ride" value="{{ form.license_number.value|default:'' }}" required>
+            {% for error in form.license_number.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" name="waiver_acknowledged"{% if form.waiver_acknowledged.value %} checked{% endif %} required> <label>I have a valid motorcycle licence and agree to the <a href="{% url 'content:terms' %}" style="text-decoration:underline">test ride terms</a></label></label>
+            {% for error in form.waiver_acknowledged.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+          <button type="submit" class="btn-volt btn-lg btn-block"><i class="bx bx-calendar-check"></i>Book Test Ride</button>
+        </form>
+      </div>
+
+      <div class="testride-info">
+        <div class="testride-info-card">
+          <h3>What to Expect</h3>
+          <div class="info-item"><i class="bx bx-time"></i>30–60 minute ride with a trained guide</div>
+          <div class="info-item"><i class="bx bx-id-card"></i>Bring your valid motorcycle licence</div>
+          <div class="info-item"><i class="bx bx-shield-alt"></i>Helmet and protective gear provided</div>
+          <div class="info-item"><i class="bx bx-tachometer"></i>Test on road and off-road terrain</div>
+          <div class="info-item"><i class="bx bx-money"></i>Completely free, no obligation</div>
+        </div>
+        <div class="testride-info-card">
+          <h3>Why Ride Electric?</h3>
+          <div class="info-item"><i class="bx bx-bolt"></i>Instant torque from 0 RPM</div>
+          <div class="info-item"><i class="bx bx-volume-mute"></i>Silent — hear the trail, not the engine</div>
+          <div class="info-item"><i class="bx bx-leaf"></i>Zero emissions, zero fuel</div>
+          <div class="info-item"><i class="bx bx-refresh"></i>30-second battery swap</div>
+        </div>
+        <div class="testride-info-card">
+          <h3>Questions?</h3>
+          {# Kept as the reference's literal strings, deliberately. These are #}
+          {# flow-specific contact points (testride@pihilics.dz, and service@pihilics.dz #}
+          {# on the service page) -- they are NOT CompanyInfo.email, which is a #}
+          {# single general address. Substituting `company.email` here would #}
+          {# silently change the page's content, so the copy stays as authored. #}
+          <div class="info-item"><i class="bx bx-phone"></i>+49 30 555 0101</div>
+          <div class="info-item"><i class="bx bx-envelope"></i>testride@pihilics.dz</div>
+          <a href="{% url 'content:support' %}" class="btn-ghost btn-sm" style="margin-top:14px">Help Center</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* Preserved verbatim from the reference: a client-side min-date of
+     tomorrow. This is a UX nicety only -- the authoritative check is
+     TestRideBookingForm.clean_date(), which rejects today or earlier
+     server-side regardless of what the browser allows. */
+  var tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('trDate').min = tomorrow.toISOString().split('T')[0];
+</script>
+{% endblock %}

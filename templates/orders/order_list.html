@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load catalog_extras orders_extras %}
+{% block title %}Orders — {{ site_name }}{% endblock %}
+{% block meta_description %}Your order history and tracking.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Order History</div>
+    <h1 class="section-title">My Orders</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'accounts:account' %}">Account</a><span class="sep">/</span>
+      <span>Orders</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    {# FLAGGED DECISION: the static mockup's filter bar only has All/Processing/ #}
+    {# Shipped/Delivered buttons — its demo data (js/data.js) never included a #}
+    {# cancelled order, so a 4th button was never needed there. The real #}
+    {# OrderStatus enum and OrderStatusFilterForm both support "cancelled" #}
+    {# (and the Design System defines its badge color), so a real order that #}
+    {# reaches that state needs a way to be filtered to — added the 4th button #}
+    {# rather than leaving cancelled orders reachable only via "All". #}
+    {# Filtering is real server-side navigation (querystring + redisplay), not #}
+    {# one of the 4 whitelisted AJAX cases, so these are plain links, not JS. #}
+    <div style="display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap">
+      <a href="{% url 'orders:order_list' %}" class="btn-{% if not request.GET.status or request.GET.status == 'all' %}dark active{% else %}outline{% endif %} btn-sm order-filter">All Orders</a>
+      <a href="{% url 'orders:order_list' %}?status=processing" class="btn-{% if request.GET.status == 'processing' %}dark active{% else %}outline{% endif %} btn-sm order-filter">Processing</a>
+      <a href="{% url 'orders:order_list' %}?status=shipped" class="btn-{% if request.GET.status == 'shipped' %}dark active{% else %}outline{% endif %} btn-sm order-filter">Shipped</a>
+      <a href="{% url 'orders:order_list' %}?status=delivered" class="btn-{% if request.GET.status == 'delivered' %}dark active{% else %}outline{% endif %} btn-sm order-filter">Delivered</a>
+      <a href="{% url 'orders:order_list' %}?status=cancelled" class="btn-{% if request.GET.status == 'cancelled' %}dark active{% else %}outline{% endif %} btn-sm order-filter">Cancelled</a>
+    </div>
+
+    <div id="ordersList">
+      {% if not orders %}
+      <div class="empty-state">
+        <i class="bx bx-package"></i>
+        <h3>No orders found</h3>
+        <p>No orders match this filter.</p>
+        <a href="{% url 'catalog:shop' %}" class="btn-volt">Browse Motorcycles</a>
+      </div>
+      {% else %}
+      {% for order in orders %}
+      <div class="order-card">
+        <div class="order-card-header">
+          <div><h4>{{ order.reference }}</h4><div class="order-date">Placed on {{ order.placed_at|date:"N j, Y" }}</div></div>
+          <span class="order-status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+        </div>
+        <div class="order-items-list">
+          {% for item in order.items.all %}
+          <div class="order-item-mini">
+            {% with image=item.product.images.first %}
+            {% if image %}<img src="{{ image.image.url }}" alt="">{% else %}<div style="width:50px;height:50px;background:var(--bone-2)"></div>{% endif %}
+            {% endwith %}
+            <span>{{ item.product_name_snapshot }} ×{{ item.quantity }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="order-card-footer">
+          <div style="display:flex;gap:10px">
+            <a href="{% url 'orders:order_detail' reference=order.reference %}" class="btn-outline btn-sm"><i class="bx bx-detail"></i>Details</a>
+            {% if order.status == "processing" or order.status == "shipped" %}
+            <a href="{% url 'orders:order_track' reference=order.reference %}" class="btn-volt btn-sm"><i class="bx bx-truck"></i>Track</a>
+            {% endif %}
+            {% if order.status == "delivered" %}
+            <button type="button" class="btn-outline btn-sm" onclick="showToast('Reorder is a demo feature')"><i class="bx bx-refresh"></i>Reorder</button>
+            {% endif %}
+          </div>
+          <div class="total">{{ order.total|price }}</div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

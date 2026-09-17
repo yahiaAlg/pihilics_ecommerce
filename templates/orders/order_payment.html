@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Complete Payment — {{ site_name }}{% endblock %}
+{% block meta_description %}Complete the payment for your {{ site_name }} order.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Order {{ order.reference }}</div>
+    <h1 class="section-title">Complete Your Payment</h1>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div style="max-width:720px;margin:0 auto">
+
+      {% if order.uses_card_gateway %}
+      {# ==================================================================
+         CIB / Edahabia via Chargily -- a completely different shape from
+         the BaridiMob branch below: no form, no upload history, just a
+         state banner and a single button that either resumes the live
+         checkout or asks Chargily for a fresh one. `chargily_return` is
+         set only from the query param Chargily's own success_url/
+         failure_url redirect back with -- it drives a transient banner
+         only, never payment_state, which only the webhook sets.
+         ================================================================== #}
+
+      {% if chargily_return == "chargily_success" and order.payment_state == "pending" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);border-left:4px solid var(--volt-dim);padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-time-five" style="font-size:1.4rem;color:var(--volt-dim)"></i>
+          <h4 style="font-weight:800;margin:0">Confirming your payment</h4>
+        </div>
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Thanks — we're just waiting on the final confirmation from the bank. This page will
+          update automatically once it arrives, usually within moments, and we'll email you either way.
+        </p>
+      </div>
+      {% elif chargily_return == "chargily_failure" and order.payment_state == "pending" %}
+      <div style="background:#fdecec;border:1px solid var(--error);border-left:4px solid var(--error);padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-error-circle" style="font-size:1.4rem;color:var(--error)"></i>
+          <h4 style="font-weight:800;margin:0">Payment didn't complete</h4>
+        </div>
+        <p style="color:#555;font-size:.9rem;margin:0">
+          It looks like the payment page was closed or canceled before finishing. Your order is
+          still held for you — try again below whenever you're ready.
+        </p>
+      </div>
+      {% elif order.payment_state == "confirmed" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);border-left:4px solid #1E8E3E;padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-check-circle" style="font-size:1.4rem;color:#1E8E3E"></i>
+          <h4 style="font-weight:800;margin:0">Payment confirmed</h4>
+        </div>
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Your card payment has gone through. Your order is now moving through fulfilment —
+          nothing further is needed from you.
+        </p>
+        <div style="margin-top:18px">
+          <a href="{% url 'orders:order_track' reference=order.reference %}" class="btn-volt"><i class="bx bx-package"></i>Track Your Order</a>
+        </div>
+      </div>
+      {% elif order.payment_state == "pending" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:24px 26px;margin-bottom:28px">
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Pay <strong>{{ order.total|price }}</strong> securely with your CIB or Edahabia card.
+          You'll be taken to our payment provider's page to enter your card details — we never
+          see or store your card number.
+        </p>
+      </div>
+      {% else %}
+      <div style="background:#fdecec;border:1px solid var(--error);border-left:4px solid var(--error);padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-error-circle" style="font-size:1.4rem;color:var(--error)"></i>
+          <h4 style="font-weight:800;margin:0">
+            {% if order.payment_state == "expired" %}Payment page expired
+            {% elif order.payment_state == "canceled" %}Payment was canceled
+            {% else %}Payment declined{% endif %}
+          </h4>
+        </div>
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Your order is still held for you. Try again below — most declines and timeouts go
+          through fine on a second attempt.
+        </p>
+      </div>
+      {% endif %}
+
+      {% if order.payment_state != "confirmed" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:30px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <i class="bx bx-credit-card" style="font-size:1.3rem;color:var(--volt-dim)"></i>
+          <h4 style="font-weight:800;margin:0">CIB / Edahabia Card</h4>
+        </div>
+        <div class="cart-summary-total" style="margin-bottom:20px"><span>Amount to pay</span><span>{{ order.total|price }}</span></div>
+
+        {% if order.can_resume_card_checkout %}
+        <a href="{{ order.chargily_checkout_url }}" class="btn-volt btn-lg"><i class="bx bx-lock-alt"></i>Continue to Payment</a>
+        {% else %}
+        <form method="post" action="{% url 'orders:order_payment' reference=order.reference %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-volt btn-lg"><i class="bx bx-lock-alt"></i>{% if order.payment_state == "pending" %}Pay Now{% else %}Try Payment Again{% endif %}</button>
+        </form>
+        {% endif %}
+        <p style="font-size:.78rem;color:#999;margin-top:14px">
+          Powered by Chargily Pay. Your card details are entered on their secure page, never on ours.
+        </p>
+      </div>
+      {% endif %}
+
+      <div style="margin-top:30px;display:flex;align-items:center;gap:8px;font-size:.85rem;color:#777">
+        <i class="bx bx-support" style="font-size:1.1rem;color:var(--volt-dim)"></i>
+        Questions about your payment? <a href="{% url 'support:contact' %}" style="color:var(--ink);font-weight:700">Contact our support team</a>
+      </div>
+
+      {% else %}
+      {# ==================================================================
+         BaridiMob / CCP / bank transfer -- unchanged from before Chargily.
+         ================================================================== #}
+
+      {# ---- state banner: the one thing the customer is here to learn ---- #}
+      {% if order.payment_state == "confirmed" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);border-left:4px solid #1E8E3E;padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-check-circle" style="font-size:1.4rem;color:#1E8E3E"></i>
+          <h4 style="font-weight:800;margin:0">Payment confirmed</h4>
+        </div>
+        <p style="color:#555;font-size:.9rem;margin:0">
+          We've matched your transfer against our account. Your order is moving through fulfilment —
+          nothing further is needed from you.
+        </p>
+        <div style="margin-top:18px">
+          <a href="{% url 'orders:order_track' reference=order.reference %}" class="btn-volt"><i class="bx bx-package"></i>Track Your Order</a>
+        </div>
+      </div>
+
+      {% elif order.payment_state == "under_review" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);border-left:4px solid var(--volt-dim);padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-time-five" style="font-size:1.4rem;color:var(--volt-dim)"></i>
+          <h4 style="font-weight:800;margin:0">Proof received — under review</h4>
+        </div>
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Our team is checking your transfer against our account. This usually takes less than one
+          business day, and we'll email you the moment it's confirmed. Your order is held for you
+          until then.
+        </p>
+      </div>
+
+      {% elif order.payment_state == "rejected" %}
+      <div style="background:#fdecec;border:1px solid var(--error);border-left:4px solid var(--error);padding:24px 26px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="bx bx-error-circle" style="font-size:1.4rem;color:var(--error)"></i>
+          <h4 style="font-weight:800;margin:0">We couldn't confirm your last proof</h4>
+        </div>
+        {% if latest_proof.review_note %}
+        <p style="color:#444;font-size:.9rem;margin:0 0 8px"><strong>What needs fixing:</strong> {{ latest_proof.review_note }}</p>
+        {% endif %}
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Your order is still held for you. Send us a corrected proof below and we'll pick it
+          straight back up.
+        </p>
+      </div>
+
+      {% else %}
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:24px 26px;margin-bottom:28px">
+        <p style="color:#555;font-size:.9rem;margin:0">
+          Transfer <strong>{{ order.total|price }}</strong> to the account below using BaridiMob,
+          your CCP account, or a bank transfer — then upload the receipt so we can confirm it.
+          Your order is reserved in the meantime.
+        </p>
+      </div>
+      {% endif %}
+
+      {# ---- where to send the money ---- #}
+      {% if order.payment_state != "confirmed" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:30px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+          <i class="bx bx-transfer" style="font-size:1.3rem;color:var(--volt-dim)"></i>
+          <h4 style="font-weight:800;margin:0">Transfer Details</h4>
+        </div>
+        {% if company.sales_account_holder %}
+        <div class="cart-summary-line"><span>Account holder</span><span style="font-weight:700">{{ company.sales_account_holder }}</span></div>
+        {% endif %}
+        {% if company.sales_bank_name %}
+        <div class="cart-summary-line"><span>Bank</span><span style="font-weight:700">{{ company.sales_bank_name }}</span></div>
+        {% endif %}
+        {% if company.sales_rip %}
+        <div class="cart-summary-line"><span>RIP (BaridiMob)</span><span style="font-weight:700;letter-spacing:.04em">{{ company.sales_rip }}</span></div>
+        {% endif %}
+        {% if company.sales_ccp_number %}
+        <div class="cart-summary-line"><span>CCP</span><span style="font-weight:700;letter-spacing:.04em">{{ company.sales_ccp_number }}</span></div>
+        {% endif %}
+        <div class="cart-summary-line"><span>Reference to use</span><span style="font-weight:700">{{ order.reference }}</span></div>
+        <div class="cart-summary-total"><span>Amount to transfer</span><span>{{ order.total|price }}</span></div>
+        {% if company.sales_payment_note %}
+        <p style="font-size:.82rem;color:#777;margin-top:16px;line-height:1.6">{{ company.sales_payment_note }}</p>
+        {% endif %}
+        <p style="font-size:.82rem;color:#777;margin-top:10px;line-height:1.6">
+          Put <strong>{{ order.reference }}</strong> in the transfer reference if your app allows it —
+          it lets us match your payment straight away.
+        </p>
+      </div>
+      {% endif %}
+
+      {# ---- the upload ---- #}
+      {% if form %}
+      <form method="post" enctype="multipart/form-data" action="{% url 'orders:order_payment' reference=order.reference %}">
+        {% csrf_token %}
+        <div style="background:var(--white);border:1px solid var(--line-light);padding:30px;margin-bottom:28px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <i class="bx bx-receipt" style="font-size:1.3rem;color:var(--volt-dim)"></i>
+            <h4 style="font-weight:800;margin:0">Upload Payment Proof</h4>
+          </div>
+          <p style="color:#777;font-size:.85rem;margin-bottom:22px">
+            A screenshot from your banking app or a PDF receipt. Required — we can't confirm a
+            transfer without it.
+          </p>
+
+          {% if form.non_field_errors %}
+          <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.file.id_for_label }}">{{ form.file.label }} <span style="color:var(--error)">*</span></label>
+            <input type="file" name="{{ form.file.html_name }}" id="{{ form.file.id_for_label }}"
+                   accept=".pdf,.jpg,.jpeg,.png,.webp" required
+                   style="width:100%;padding:14px;border:1px dashed var(--line);background:var(--bone);font-size:.9rem">
+            {% for error in form.file.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            <p style="font-size:.78rem;color:#999;margin-top:6px">PDF, JPG, PNG or WEBP — up to 10 MB.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.amount_declared.id_for_label }}">{{ form.amount_declared.label }}</label>
+            <input type="number" step="0.01" min="0" name="{{ form.amount_declared.html_name }}"
+                   id="{{ form.amount_declared.id_for_label }}" class="form-input"
+                   value="{{ form.amount_declared.value|default_if_none:order.total }}">
+            {% for error in form.amount_declared.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.transaction_reference.id_for_label }}">{{ form.transaction_reference.label }}</label>
+            <input type="text" name="{{ form.transaction_reference.html_name }}"
+                   id="{{ form.transaction_reference.id_for_label }}" class="form-input"
+                   value="{{ form.transaction_reference.value|default_if_none:'' }}"
+                   placeholder="As shown in your banking app">
+            {% for error in form.transaction_reference.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.sender_note.id_for_label }}">{{ form.sender_note.label }}</label>
+            <textarea name="{{ form.sender_note.html_name }}" id="{{ form.sender_note.id_for_label }}"
+                      rows="3" class="form-input">{{ form.sender_note.value|default_if_none:'' }}</textarea>
+          </div>
+
+          <button type="submit" class="btn-volt btn-lg" style="margin-top:8px">
+            <i class="bx bx-upload"></i> Submit Payment Proof
+          </button>
+        </div>
+      </form>
+      {% endif %}
+
+      {# ---- manual fallback, mirroring the transfer-details block above ---- #}
+      {% if order.payment_state != "confirmed" %}
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:22px 26px;margin-bottom:28px">
+        <p style="color:#555;font-size:.87rem;margin:0;line-height:1.7">
+          <i class="bx bx-envelope" style="color:var(--volt-dim)"></i>
+          Having difficulty uploading the receipt? Send it to
+          <strong>{{ company.payment_proof_email }}</strong> with the subject
+          <strong>Payment order {{ order.reference }}</strong>.
+        </p>
+      </div>
+      {% endif %}
+
+      {# ---- submission history: what we've received and what we said ---- #}
+      {% if proofs %}
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:30px">
+        <h4 style="font-weight:800;margin-bottom:18px">Your Submissions</h4>
+        {% for proof in proofs %}
+        <div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line-light)">
+          <div>
+            <div style="font-weight:700;font-size:.88rem">{{ proof.original_filename|default:"Payment proof" }}</div>
+            <div style="font-size:.78rem;color:#999">{{ proof.uploaded_at|date:"j M Y, H:i" }}{% if proof.amount_declared %} — {{ proof.amount_declared|price }}{% endif %}</div>
+            {% if proof.status == "rejected" and proof.review_note %}
+            <div style="font-size:.8rem;color:var(--error);margin-top:4px">{{ proof.review_note }}</div>
+            {% endif %}
+          </div>
+          <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;{% if proof.status == 'confirmed' %}color:#1E8E3E{% elif proof.status == 'rejected' %}color:var(--error){% else %}color:#999{% endif %}">
+            {{ proof.get_status_display }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div style="margin-top:30px;display:flex;align-items:center;gap:8px;font-size:.85rem;color:#777">
+        <i class="bx bx-support" style="font-size:1.1rem;color:var(--volt-dim)"></i>
+        Questions about your payment? <a href="{% url 'support:contact' %}" style="color:var(--ink);font-weight:700">Contact our support team</a>
+      </div>
+
+      {% endif %}
+
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ story.title }} — {{ site_name }} Journal{% endblock %}
+{% block meta_description %}{{ story.excerpt }}{% endblock %}
+
+{% block content %}
+{% comment %} FLAGGED GAP: no reference page exists for a single story. In the static
+   build every article card fired `showToast('Article is a demo')` and no
+   detail view was ever designed. `Story` has a slug, a body and a
+   `story_detail_view` already pointing at this template name, so the page
+   has to exist for the Stories grid to link anywhere real.
+
+   Composed entirely from classes the design system already defines
+   (.page-header, .breadcrumb, .section, .container-x, .body-l, .btn-line)
+   plus the .blog-featured-img rule carried over from stories.html for the
+   cover image. No new class, no new CSS file, Boxicons only. {% endcomment %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">{{ site_name }} Journal</div>
+    <h1 class="section-title">{{ story.title }}</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'content:story_list' %}">Stories</a><span class="sep">/</span>
+      <span>{{ story.title }}</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div style="max-width:760px;margin:0 auto">
+      {% if story.cover_image %}
+      <div style="aspect-ratio:16/10;overflow:hidden;margin-bottom:30px">
+        <img src="{{ story.cover_image.url }}" alt="{{ story.title }}" style="width:100%;height:100%;object-fit:cover" />
+      </div>
+      {% endif %}
+      <div style="display:flex;gap:14px;font-size:.82rem;color:#999;align-items:center;margin-bottom:24px">
+        <span><i class="bx bx-calendar"></i> {{ story.published_at|date:"M j, Y" }}</span>
+      </div>
+      {% if story.excerpt %}<p class="body-l" style="margin-bottom:24px">{{ story.excerpt }}</p>{% endif %}
+      {% comment %} `Story.body` is plain TextField, not rich text or markdown, so it is
+         rendered as escaped paragraphs split on blank lines -- never with
+         `|safe`, which would make any admin-authored body an XSS vector. {% endcomment %}
+      <div style="color:#333;line-height:1.8">
+        {{ story.body|linebreaks }}
+      </div>
+      <div style="border-top:1px solid var(--line-light);margin-top:40px;padding-top:24px">
+        <a href="{% url 'content:story_list' %}" class="btn-line"><i class="bx bx-left-arrow-alt"></i> Back to Stories</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

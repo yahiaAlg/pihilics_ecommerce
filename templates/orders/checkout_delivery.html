@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Checkout — {{ site_name }}{% endblock %}
+{% block meta_description %}Complete your {{ site_name }} purchase.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Checkout</div>
+    <h1 class="section-title">Complete Your Order</h1>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    {% include "orders/_checkout_stepper.html" %}
+
+    <div class="checkout-layout">
+      <div>
+        <form method="post" action="{% url 'orders:checkout_delivery' %}">
+          {% csrf_token %}
+          <div class="checkout-step active" data-step="2">
+            <div class="checkout-panel">
+              <h3>Delivery Address</h3>
+              {% if form.non_field_errors %}
+              <div style="background:#fdecec;border:1px solid var(--error);color:var(--error);padding:12px 16px;margin-bottom:20px;font-size:.85rem">
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+              </div>
+              {% endif %}
+              <div class="form-group">
+                <label class="form-label">Street Address</label>
+                <input type="text" name="street" class="form-control" placeholder="12 Rue Didouche Mourad" value="{{ form.street.value|default:'' }}" required>
+                {% for error in form.street.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">City</label>
+                  <input type="text" name="city" class="form-control" placeholder="Sétif" value="{{ form.city.value|default:'' }}" required>
+                  {% for error in form.city.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Postal Code</label>
+                  <input type="text" name="postal_code" class="form-control" placeholder="19000" value="{{ form.postal_code.value|default:'' }}" required>
+                  {% for error in form.postal_code.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Wilaya</label>
+                {# The static mockup hardcoded a handful of European countries. #}
+                {# Rendered from the real form field instead: core.constants #}
+                {# WILAYA_CHOICES, the 58 wilayas Address/Order/ShippingZone all #}
+                {# key off, so adding or suspending a delivery zone never means #}
+                {# editing this <select>. #}
+                <select name="wilaya" class="form-select" required>
+                  {% for value, label in form.fields.wilaya.choices %}
+                  <option value="{{ value }}"{% if form.wilaya.value == value %} selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                {% for error in form.wilaya.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+              </div>
+            </div>
+            <div class="checkout-panel">
+              <h3>Delivery Method</h3>
+              {# Rendered from DeliveryMethod.choices rather than a hardcoded #}
+              {# list of three, and priced from the selected wilaya's own #}
+              {# ShippingZone row (see core.utils.get_shipping_cost) instead of #}
+              {# the mockup's flat "€49" -- Algerian couriers price per wilaya, #}
+              {# and stopdesk collection is always cheaper than home delivery. #}
+              {% for value, label in form.fields.delivery_method.choices %}
+              <label class="payment-method{% if form.delivery_method.value == value or not form.delivery_method.value and value == 'standard' %} active{% endif %}" data-method-option>
+                <input type="radio" name="delivery_method" value="{{ value }}" style="position:absolute;opacity:0;width:0;height:0"{% if form.delivery_method.value == value or not form.delivery_method.value and value == 'standard' %} checked{% endif %}>
+                <i class="bx {% if value == 'express' %}bx-rocket{% elif value == 'desk' %}bx-store{% else %}bx-truck{% endif %}"></i>
+                <div>
+                  <h6>{{ label }}</h6>
+                  <p>{% if delivery_zone %}{{ delivery_zone.delivery_estimate }}{% else %}Estimated on confirmation{% endif %}</p>
+                </div>
+                <span style="margin-left:auto;font-weight:800">
+                  {% if value == 'desk' and delivery_zone and delivery_zone.desk_fee is not None %}{{ delivery_zone.desk_fee|price }}
+                  {% elif value == 'express' %}{{ express_fee|price }}
+                  {% elif delivery_zone %}{{ delivery_zone.home_fee|price }}
+                  {% else %}{{ standard_fee|price }}{% endif %}
+                </span>
+              </label>
+              {% endfor %}
+              {% for error in form.delivery_method.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
+            </div>
+            <div style="display:flex;gap:10px">
+              <a href="{% url 'orders:checkout_information' %}" class="btn-outline btn-lg"><i class="bx bx-left-arrow-alt"></i> Back</a>
+              <button type="submit" class="btn-volt btn-lg">Continue to Payment <i class="bx bx-right-arrow-alt"></i></button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {% include "orders/_checkout_summary.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* Plain visual toggle, no server round-trip — mirrors the static build's
+     selectDelivery() exactly, just scoped to a real radio input's checked
+     state instead of a bare onclick div. */
+  document.querySelectorAll('[data-method-option]').forEach(function (label) {
+    label.addEventListener('click', function () {
+      document.querySelectorAll('[data-method-option]').forEach(function (l) { l.classList.remove('active'); });
+      label.classList.add('active');
+      label.querySelector('input[type=radio]').checked = true;
+    });
+  });
+</script>
+{% endblock %}

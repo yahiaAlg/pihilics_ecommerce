@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Support & Help Center — {{ site_name }}{% endblock %}
+{% block meta_description %}Find answers, browse FAQs, and contact {{ site_name }} support.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Help Center</div>
+    <h1 class="section-title">Support</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Support</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <!-- Search bar -->
+    <div style="max-width:600px;margin:0 auto 40px">
+      <div class="search-bar-large">
+        <i class="bx bx-search"></i>
+        <input type="text" id="faqSearch" placeholder="Search for help articles..." value="{{ query }}">
+      </div>
+    </div>
+
+    <!-- Category cards -->
+    <div class="support-cats" id="supportCats">
+      {% for cat in categories %}
+      <a href="#cat-{{ cat.value }}" class="support-cat" style="display:block;text-decoration:none;color:inherit">
+        <i class="bx {{ cat.icon }}"></i>
+        <h5>{{ cat.label }}</h5>
+        <p>{{ cat.count }} article{{ cat.count|pluralize }}</p>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- FAQ accordion -->
+    <div class="support-faq">
+      <h2 class="section-title" style="text-align:center;margin-bottom:40px" data-reveal>Frequently Asked Questions</h2>
+      {# Server-rendered on first load (works with JS off, and is what a #}
+      {# reload of the same ?q= URL shows); faqSearch.js below replaces this #}
+      {# same #faqAccordion content live as the visitor types, via the #}
+      {# whitelisted search-as-you-type AJAX case -- never a second, #}
+      {# competing implementation of the filtering logic. #}
+      <div id="faqAccordion">
+        {% regroup entries by get_category_display as category_groups %}
+        {% for group in category_groups %}
+        <h3 style="font-size:1.2rem;font-weight:800;margin:30px 0 14px" id="cat-{{ group.list.0.category }}">{{ group.grouper }}</h3>
+        {% for entry in group.list %}
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+            <span>{{ entry.question }}</span><i class="bx bx-chevron-down"></i>
+          </div>
+          <div class="accordion-body"><div class="accordion-body-inner">{{ entry.answer }}</div></div>
+        </div>
+        {% endfor %}
+        {% empty %}
+        <div class="empty-state">
+          <i class="bx bx-search-alt"></i>
+          <h3>No results found</h3>
+          <p>Try a different search term.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Contact options -->
+    <div class="support-contact">
+      <div class="support-contact-card">
+        <h4><i class="bx bx-envelope"></i> Email Us</h4>
+        <p>{{ support.email_response_note }}</p>
+        <div class="contact-item"><i class="bx bx-mail-send"></i> {{ support.email_support }}</div>
+        <div class="contact-item"><i class="bx bx-mail-send"></i> {{ support.email_sales }}</div>
+        {# The reference's embedded form has no Name field, yet ContactMessage.name #}
+        {# is required (not blank=True) -- keeping the mockup's field set as-is #}
+        {# would submit a form that always 400s. Added the one field the model #}
+        {# actually requires; everything else matches the reference exactly. This #}
+        {# is a real POST + redirect (PRG), not the toast-only no-op it replaces. #}
+        <form method="post" action="{% url 'content:support' %}" style="margin-top:20px">
+          {% csrf_token %}
+          <input type="hidden" name="department" value="support">
+          {% if contact_form.non_field_errors or contact_form.name.errors %}
+          <div style="color:#ff8080;font-size:.82rem;margin-bottom:10px">{{ contact_form.name.errors|join:" " }}{{ contact_form.non_field_errors|join:" " }}</div>
+          {% endif %}
+          <div class="form-group" style="margin-bottom:12px">
+            <input type="text" name="name" class="form-control" placeholder="Your name" value="{{ contact_form.name.value|default:'' }}" required style="background:rgba(255,255,255,.05);border-color:var(--line-dark);color:var(--white)">
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <input type="email" name="email" class="form-control" placeholder="Your email" value="{{ contact_form.email.value|default:'' }}" required style="background:rgba(255,255,255,.05);border-color:var(--line-dark);color:var(--white)">
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <input type="text" name="subject" class="form-control" placeholder="Subject" value="{{ contact_form.subject.value|default:'' }}" required style="background:rgba(255,255,255,.05);border-color:var(--line-dark);color:var(--white)">
+          </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <textarea name="message" class="form-control" placeholder="Your message" required style="background:rgba(255,255,255,.05);border-color:var(--line-dark);color:var(--white);min-height:80px">{{ contact_form.message.value|default:"" }}</textarea>
+          </div>
+          <button type="submit" class="btn-volt btn-block"><i class="bx bx-send"></i>Send Message</button>
+        </form>
+      </div>
+      <div class="support-contact-card">
+        <h4><i class="bx bx-phone"></i> Call Us</h4>
+        <p>{{ support.hours_text }}</p>
+        <div class="contact-item"><i class="bx bx-phone-call"></i> {{ company.phone }}</div>
+        <div class="contact-item"><i class="bx bx-headphone"></i> {{ support.livechat_text }}</div>
+        <div style="margin-top:24px">
+          <h5 style="font-weight:700;margin-bottom:12px">Other Ways to Reach Us</h5>
+          <div class="contact-item"><i class="bx bx-map"></i> Visit a dealer — <a href="{% url 'dealers:dealer_list' %}" style="color:var(--volt);text-decoration:underline">Find one near you</a></div>
+          <div class="contact-item"><i class="bx bx-calendar"></i> Book a <a href="{% url 'bookings:test_ride' %}" style="color:var(--volt);text-decoration:underline">test ride</a></div>
+          <div class="contact-item"><i class="bx bx-wrench"></i> Service & repairs — <a href="{% url 'dealers:dealer_list' %}" style="color:var(--volt);text-decoration:underline">Find service center</a></div>
+        </div>
+        <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line-dark)">
+          <h5 style="font-weight:700;margin-bottom:10px">Follow Us</h5>
+          <div style="display:flex;gap:14px">
+            <a href="{{ company.instagram_url|default:'#' }}" style="font-size:1.4rem;color:var(--white)"><i class="bx bxl-instagram"></i></a>
+            <a href="{{ company.youtube_url|default:'#' }}" style="font-size:1.4rem;color:var(--white)"><i class="bx bxl-youtube"></i></a>
+            <a href="{{ company.facebook_url|default:'#' }}" style="font-size:1.4rem;color:var(--white)"><i class="bx bxl-facebook"></i></a>
+            <a href="{{ company.twitter_url|default:'#' }}" style="font-size:1.4rem;color:var(--white)"><i class="bx bxl-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* Search-as-you-type against the real FAQEntry table (content:faq_search),
+     replacing #faqAccordion's contents live -- the one whitelisted AJAX case
+     this page uses. Debounced, and the "?q=" URL is kept in sync with
+     history.replaceState so a reload or shared link reproduces the same
+     filtered view via the plain server-rendered path above. */
+  var faqAccordion = document.getElementById('faqAccordion');
+  var faqSearchInput = document.getElementById('faqSearch');
+  var faqDebounce;
+
+  function renderFAQResults(data) {
+    if (!data.categories.length) {
+      faqAccordion.innerHTML = '<div class="empty-state"><i class="bx bx-search-alt"></i><h3>No results found</h3><p>Try a different search term.</p></div>';
+      return;
+    }
+    faqAccordion.innerHTML = data.categories.map(function (cat) {
+      return '<h3 style="font-size:1.2rem;font-weight:800;margin:30px 0 14px" id="cat-' + cat.value + '">' + cat.label + '</h3>' +
+        cat.items.map(function (item) {
+          return '<div class="accordion-item"><div class="accordion-header" onclick="this.parentElement.classList.toggle(&#39;open&#39;)"><span>' +
+            item.question + '</span><i class="bx bx-chevron-down"></i></div><div class="accordion-body"><div class="accordion-body-inner">' +
+            item.answer + '</div></div></div>';
+        }).join('');
+    }).join('');
+  }
+
+  faqSearchInput.addEventListener('input', function (e) {
+    var q = e.target.value;
+    var url = new URL(window.location);
+    if (q) { url.searchParams.set('q', q); } else { url.searchParams.delete('q'); }
+    history.replaceState(null, '', url);
+
+    clearTimeout(faqDebounce);
+    faqDebounce = setTimeout(function () {
+      fetch('{% url "content:faq_search" %}?q=' + encodeURIComponent(q), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      })
+        .then(function (r) { return r.json(); })
+        .then(renderFAQResults);
+    }, 200);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% load catalog_extras %}
+{% comment %} Mirrors js/main.js's productCardHTML(). Note: Quick View (a client-only
+   modal preview in the static build) has no server-side equivalent under
+   the "minimal AJAX only" rule (populating a modal without navigating is
+   not one of the four allowed AJAX cases) and isn't a PRG-able action
+   either, so it's dropped here — "View" already takes the visitor to the
+   same full detail page Quick View only ever gave a peek at. {% endcomment %}
+<div class="product-card" data-product-id="{{ product.id }}">
+  <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="product-card-media" style="display:block">
+    {% if product.badge %}<span class="product-card-badge{% if product.badge == 'sale' %} sale{% elif product.badge == 'new' or product.badge == 'limited' %} dark{% endif %}">{{ product.get_badge_display }}</span>{% endif %}
+    <div class="product-card-actions">
+      <form method="post" action="{% url 'catalog:wishlist_toggle' %}" onclick="event.stopPropagation()" style="display:contents">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="pc-action-btn{% if product.id in header_wishlist_ids %} active{% endif %}" aria-label="Wishlist"><i class='bx bx-heart'></i></button>
+      </form>
+      {% if product.is_motorcycle %}
+      <form method="post" action="{% url 'catalog:compare_toggle' %}" onclick="event.stopPropagation()" style="display:contents">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="pc-action-btn{% if product.id in header_compare_ids %} active{% endif %}" aria-label="Compare"><i class='bx bx-git-compare'></i></button>
+      </form>
+      {% endif %}
+    </div>
+    {% with image=product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ product.name }}" loading="lazy" />{% endif %}{% endwith %}
+  </a>
+  <div class="product-card-body">
+    <div class="product-card-cat">{{ product.category.name }}</div>
+    <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="product-card-name" style="text-decoration:none;color:inherit">{{ product.name }}</a>
+    <div class="product-card-rating">{% star_rating product.average_rating %}<span class="count">({{ product.review_count_cached }})</span></div>
+    <div class="product-card-specs">
+      {% with range_spec=product|get_spec:"Range" power_spec=product|get_spec:"Power" weight_spec=product|get_spec:"Weight" top_speed_spec=product|get_spec:"Top Speed" %}
+      {% if range_spec %}<span><i class="bx bx-battery-charging"></i>{{ range_spec }}</span>{% endif %}
+      {% if power_spec %}<span><i class="bx bx-bolt"></i>{{ power_spec }}</span>{% endif %}
+      {% if weight_spec %}<span><i class="bx bx-weight"></i>{{ weight_spec }}</span>{% endif %}
+      {% if top_speed_spec %}<span><i class="bx bx-tachometer"></i>{{ top_speed_spec }}</span>{% endif %}
+      {% endwith %}
+    </div>
+    {% with colors=product.colors.all|slice:":4" %}{% if colors %}<div class="product-card-colors">{% for color in colors %}<span class="swatch" style="background:{{ color.hex_value }}" title="{{ color.name }}"></span>{% endfor %}</div>{% endif %}{% endwith %}
+    <div class="product-card-availability {{ product.availability_css_class }}">{{ product.availability_status.label }}</div>
+    <div class="product-card-footer">
+      <div class="product-card-price">{{ product.price|price }}{% if product.old_price %}<span class="old">{{ product.old_price|price }}</span>{% endif %}</div>
+    </div>
+    <div class="product-card-cta">
+      <form method="post" action="{% url 'cart:add_to_cart' %}">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <input type="hidden" name="quantity" value="1">
+        {% with first_color=product.colors.first %}{% if first_color %}<input type="hidden" name="color" value="{{ first_color.name }}">{% endif %}{% endwith %}
+        {% if product.is_accessory %}{% with first_size=product.sizes.first %}{% if first_size %}<input type="hidden" name="size" value="{{ first_size.label }}">{% endif %}{% endwith %}{% endif %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn-volt btn-sm"><i class='bx bx-cart'></i>Add to Cart</button>
+      </form>
+      <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="btn-outline btn-sm">View</a>
+    </div>
+  </div>
+</div>

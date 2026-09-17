@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Compare Models — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Side by Side</div>
+    <h1 class="section-title">Compare Models</h1>
+    <div class="breadcrumb"><a href="{% url 'content:home' %}">Home</a><span class="sep">/</span><span>Compare</span></div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div class="compare-slots">
+      {% for product in products %}
+      <div class="compare-slot filled">
+        <div class="slot-product">
+          {% with image=product.images.first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ product.name }}" />{% endif %}{% endwith %}
+          <div class="name">{{ product.name }}</div>
+          <div class="price">{{ product.price|price }}</div>
+        </div>
+        <form method="post" action="{% url 'catalog:compare_toggle' %}">
+          {% csrf_token %}
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+          <input type="hidden" name="next" value="{% url 'catalog:compare' %}">
+          <button type="submit" class="remove-btn" style="border:0;background:none;width:100%"><i class="bx bx-x"></i> Remove</button>
+        </form>
+      </div>
+      {% endfor %}
+      {% for i in "1234" %}{% if forloop.counter > products|length %}
+      <div class="compare-slot"><i class="bx bx-plus-circle"></i><p>Add a model</p></div>
+      {% endif %}{% endfor %}
+    </div>
+
+    <div style="margin-bottom:30px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <div style="position:relative">
+        <button type="button" class="btn-dark btn-sm" id="addModelBtn"><i class='bx bx-plus'></i>Add Model to Compare</button>
+        <div id="addModelDropdown" style="display:none;position:absolute;top:100%;left:0;margin-top:8px;background:var(--white);border:1px solid var(--line-light);min-width:260px;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.15)">
+          {% if products|length >= 4 %}
+          <div style="padding:14px;color:#999;font-size:.85rem">Compare list is full (max 4) — remove one first</div>
+          {% else %}
+          {% for other in other_motorcycles %}
+          <form method="post" action="{% url 'catalog:compare_toggle' %}" style="margin:0">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" value="{{ other.id }}">
+            <input type="hidden" name="next" value="{% url 'catalog:compare' %}">
+            <button type="submit" style="display:block;width:100%;text-align:left;border:0;background:none;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line-light);font-size:.9rem">{{ other.name }} — {{ other.price|price }}</button>
+          </form>
+          {% empty %}
+          <div style="padding:14px;color:#999;font-size:.85rem">All models added</div>
+          {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      {% if products %}
+      <form method="post" action="{% url 'catalog:compare_clear' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-outline btn-sm"><i class='bx bx-trash'></i>Clear All</button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if products %}
+    <div class="compare-table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            {% for product in products %}
+            <th>
+              {% with image=product.images.first %}{% if image %}<img src="{{ image.image.url }}" class="compare-product-img" alt="{{ product.name }}" />{% endif %}{% endwith %}
+              <div class="compare-product-name">{{ product.name }}</div>
+              <div class="compare-product-price">{{ product.price|price }}</div>
+              <a href="{% url 'catalog:product_detail' slug=product.slug %}" class="btn-volt btn-sm" style="margin-top:10px">View</a>
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Category</td>{% for product in products %}<td>{{ product.category.name }}</td>{% endfor %}</tr>
+          <tr><td>Price</td>{% for product in products %}<td>{{ product.price|price }}</td>{% endfor %}</tr>
+          {% for key in spec_keys %}
+          <tr>
+            <td>{{ key }}</td>
+            {% for product in products %}<td class="{% if key in differing_specs %}diff-highlight{% endif %}">{{ product|get_spec:key|default:"—" }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+          <tr><td>Rating</td>{% for product in products %}<td>{% star_rating product.average_rating ".9rem" %} {{ product.average_rating }}</td>{% endfor %}</tr>
+          <tr><td>Reviews</td>{% for product in products %}<td>{{ product.review_count_cached }}</td>{% endfor %}</tr>
+          <tr><td>Availability</td>{% for product in products %}<td class="product-card-availability {{ product.availability_css_class }}">{{ product.availability_status.label }}</td>{% endfor %}</tr>
+          <tr>
+            <td>Colors</td>
+            {% for product in products %}
+            <td>{% for color in product.colors.all %}<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:{{ color.hex_value }};margin:0 2px;border:1px solid #fff;box-shadow:0 0 0 1px var(--line-light)"></span>{% endfor %}</td>
+            {% endfor %}
+          </tr>
+          <tr>
+            <td></td>
+            {% for product in products %}
+            <td>
+              <form method="post" action="{% url 'cart:add_to_cart' %}">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="hidden" name="quantity" value="1">
+                {% with first_color=product.colors.first %}{% if first_color %}<input type="hidden" name="color" value="{{ first_color.name }}">{% endif %}{% endwith %}
+                <input type="hidden" name="next" value="{% url 'catalog:compare' %}">
+                <button type="submit" class="btn-outline btn-sm"><i class="bx bx-cart"></i>Add to Cart</button>
+              </form>
+            </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class='bx bx-git-compare'></i>
+      <h3>No models selected</h3>
+      <p>Add 2–4 motorcycles to compare specifications side by side. Use the "Add Model" button above to get started.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+  var addModelBtn = document.getElementById('addModelBtn');
+  if (addModelBtn) {
+    addModelBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var dd = document.getElementById('addModelDropdown');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', function () {
+      document.getElementById('addModelDropdown').style.display = 'none';
+    });
+  }
+</script>
+{% endblock %}

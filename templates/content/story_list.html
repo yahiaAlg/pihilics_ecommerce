@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Stories — {{ site_name }} Journal{% endblock %}
+{% block meta_description %}Rider stories, trail guides, and technology deep dives from the {{ site_name }} Journal.{% endblock %}
+
+{% block extra_head %}
+{% comment %} Copied VERBATIM from stories.html's own <head> <style> block -- none of
+   these .blog-* classes exist in theme.css or pages.css. Same treatment as
+   about.html and service.html: the frozen stylesheets stay untouched and the
+   page-local rules ride along in extra_head, unaltered. {% endcomment %}
+<style>
+
+    .blog-featured { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; margin-bottom: 50px; background: var(--white); border: 1px solid var(--line-light); }
+    .blog-featured-img { aspect-ratio: 16/10; overflow: hidden; }
+    .blog-featured-img img { width: 100%; height: 100%; object-fit: cover; }
+    .blog-featured-body { padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+    .blog-featured-body .cat { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--volt-dim); margin-bottom: 10px; }
+    .blog-featured-body h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; line-height: 1.1; margin-bottom: 14px; }
+    .blog-featured-body p { color: #555; line-height: 1.6; margin-bottom: 20px; }
+    .blog-featured-body .meta { display: flex; gap: 14px; font-size: .82rem; color: #999; align-items: center; }
+    .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .blog-card { background: var(--white); border: 1px solid var(--line-light); cursor: pointer; transition: transform .4s var(--ease), box-shadow .4s ease; }
+    .blog-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,.1); }
+    .blog-card-img { aspect-ratio: 16/10; overflow: hidden; }
+    .blog-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease); }
+    .blog-card:hover .blog-card-img img { transform: scale(1.06); }
+    .blog-card-body { padding: 24px; }
+    .blog-card-body .cat { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--volt-dim); margin-bottom: 8px; }
+    .blog-card-body h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+    .blog-card-body p { font-size: .88rem; color: #666; line-height: 1.5; margin-bottom: 14px; }
+    .blog-card-body .meta { display: flex; gap: 10px; font-size: .78rem; color: #999; }
+    .blog-cats { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+    @media (max-width: 860px) { .blog-featured { grid-template-columns: 1fr; } .blog-grid { grid-template-columns: 1fr; } }
+  </style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">{{ site_name }} Journal</div>
+    <h1 class="section-title">Stories</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <span>Stories</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    {% comment %} FLAGGED GAP -- the reference's .blog-cats filter bar (All / Rider
+       Stories / Trail Guides / Technology / News) is NOT rendered here.
+       `content.Story` has no category field at all -- its full set is title,
+       slug, excerpt, body, cover_image, published_at, is_published. There is
+       nothing to filter on, and no value any button could send. The options
+       were: (a) ship five buttons that cannot filter, (b) invent a Story
+       category model unilaterally, or (c) omit the bar and flag it. Took (c).
+       Adding `Story.category` is a migration decision, noted in TODO.md.
+       For the same reason the per-article author and read-time meta are
+       omitted below -- neither has a backing field -- while the publication
+       date, which does, is kept. {% endcomment %}
+
+    {% if featured_story %}
+    <div class="blog-featured" data-reveal>
+      <div class="blog-featured-img">
+        {% if featured_story.cover_image %}<img src="{{ featured_story.cover_image.url }}" alt="" />{% endif %}
+      </div>
+      <div class="blog-featured-body">
+        <div class="cat">Featured</div>
+        <h2>{{ featured_story.title }}</h2>
+        <p>{{ featured_story.excerpt }}</p>
+        <div class="meta">
+          <span><i class="bx bx-calendar"></i> {{ featured_story.published_at|date:"M j, Y" }}</span>
+        </div>
+        <a href="{% url 'content:story_detail' slug=featured_story.slug %}" class="btn-volt" style="margin-top:20px">Read Article <i class="bx bx-right-arrow-alt"></i></a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="blog-grid" id="blogGrid">
+      {% for story in stories %}
+      {% comment %} The reference's card was an onclick div that only fired a "demo" toast.
+         It is now a real link to the story's own page -- plain navigation, not
+         AJAX, and the card markup/classes are otherwise unchanged. {% endcomment %}
+      <a href="{% url 'content:story_detail' slug=story.slug %}" class="blog-card" data-reveal style="text-decoration:none;color:inherit;display:block">
+        <div class="blog-card-img">
+          {% if story.cover_image %}<img src="{{ story.cover_image.url }}" alt="" />{% endif %}
+        </div>
+        <div class="blog-card-body">
+          <h3>{{ story.title }}</h3>
+          <p>{{ story.excerpt }}</p>
+          <div class="meta"><span><i class="bx bx-calendar"></i> {{ story.published_at|date:"M j, Y" }}</span></div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="empty-state" style="grid-column:1/-1">
+        <i class="bx bx-news"></i>
+        <h3>No stories yet</h3>
+        <p>New articles from the {{ site_name }} Journal will appear here.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

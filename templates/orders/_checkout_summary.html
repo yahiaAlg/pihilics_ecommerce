@@ -1,0 +1,35 @@
+{% load catalog_extras %}
+{# Shared across all 4 checkout step templates (rule 4's spirit — one #}
+{# rendering of the persistent order-summary sidebar, spec 6.9). Expects #}
+{# `cart` always, and `pricing` (a dict from orders.utils.build_order_pricing, #}
+{# or None) in context. #}
+{# #}
+{# FLAGGED DECISION: the static build computes a full Shipping/VAT/Total #}
+{# estimate on every step using flat, address-independent math. The real #}
+{# figures depend on the delivery wilaya (TVA rate, shipping zone) and method (Express #}
+{# surcharge) captured in Step 2, so `pricing` is genuinely unknown before #}
+{# that data exists in session (Step 1, and Step 2 on first visit before #}
+{# it's submitted) — the view intentionally passes `pricing=None` rather #}
+{# than a placeholder. Showing Subtotal plus an honest "calculated next" #}
+{# note beats fabricating a Shipping/VAT figure that hasn't been computed. #}
+<div class="cart-summary">
+  <h3>Order Summary</h3>
+  {% for item in cart.items.all %}
+  <div class="cart-summary-line"><span>{{ item.product.name }} ×{{ item.quantity }}</span><span>{{ item.line_total|price }}</span></div>
+  {% endfor %}
+  <div style="border-top:1px solid var(--line-light);margin-top:10px;padding-top:10px"></div>
+  <div class="cart-summary-line"><span>Subtotal</span><span>{{ cart.subtotal|price }}</span></div>
+  {% if pricing %}
+  <div class="cart-summary-line"><span>Shipping</span><span>{% if pricing.shipping_cost == 0 %}Free{% else %}{{ pricing.shipping_cost|price }}{% endif %}</span></div>
+  {% if pricing.discount_amount %}
+  <div class="cart-summary-line"><span>Discount</span><span>-{{ pricing.discount_amount|price }}</span></div>
+  {% endif %}
+  <div class="cart-summary-line"><span>VAT</span><span>{{ pricing.vat_amount|price }}</span></div>
+  <div class="cart-summary-total"><span>Total</span><span>{{ pricing.total|price }}</span></div>
+  {% else %}
+  <p style="font-size:.8rem;color:#999;margin-top:10px">Shipping and VAT are calculated once your delivery address and method are set.</p>
+  {% endif %}
+  <div style="margin-top:16px;display:flex;align-items:center;gap:8px;font-size:.82rem;color:#666">
+    <i class="bx bx-lock-alt" style="color:var(--success)"></i> Your payment information is encrypted and secure.
+  </div>
+</div>

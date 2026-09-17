@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load catalog_extras orders_extras %}
+{% block title %}Checkout — {{ site_name }}{% endblock %}
+{% block meta_description %}Complete your {{ site_name }} purchase.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Checkout</div>
+    <h1 class="section-title">Complete Your Order</h1>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    {% include "orders/_checkout_stepper.html" %}
+
+    <div class="checkout-layout">
+      <div>
+        <form method="post" action="{% url 'orders:checkout_review' %}">
+          {% csrf_token %}
+          <div class="checkout-step active" data-step="4">
+            <div class="checkout-panel">
+              <h3>Order Review</h3>
+              <div id="reviewItems">
+                {% for item in cart.items.all %}
+                <div class="order-review-item">
+                  {% with image=item.product.images.first %}
+                  {% if image %}<img src="{{ image.image.url }}" alt="{{ item.product.name }}">{% else %}<div style="width:60px;height:60px;background:var(--bone-2)"></div>{% endif %}
+                  {% endwith %}
+                  <div>
+                    <h6>{{ item.product.name }}</h6>
+                    {% for row in item|option_rows %}<div style="font-size:.8rem;color:#999">{{ row.label }}{% if row.price %} (+{{ row.price|price }}){% endif %}</div>{% endfor %}
+                    <div class="qty">Qty: {{ item.quantity }}</div>
+                    <div style="font-weight:700">{{ item.line_total|price }}</div>
+                  </div>
+                </div>
+                {% endfor %}
+                <div style="border-top:2px solid var(--ink);margin-top:16px;padding-top:16px;display:flex;justify-content:space-between;font-size:1.5rem;font-weight:800"><span>Total</span><span>{{ pricing.total|price }}</span></div>
+              </div>
+            </div>
+            <div class="checkout-panel">
+              <h3>Delivery To</h3>
+              <p style="color:#555;line-height:1.6">{{ checkout.information.first_name }} {{ checkout.information.last_name }}<br>{{ checkout.delivery.street }}<br>{{ checkout.delivery.postal_code }} {{ checkout.delivery.city }}, {{ delivery_wilaya_display }}<br>{{ checkout.information.phone }}</p>
+              <p style="color:#999;font-size:.85rem;margin-top:10px">{{ delivery_method_display }}</p>
+            </div>
+            <div class="checkout-panel">
+              <h3>Payment</h3>
+              {# Rendered from the view's resolved PaymentMethod label rather #}
+              {# than an if/elif chain of hardcoded method names, so adding or #}
+              {# renaming a payment method never silently prints a blank here. #}
+              <p style="color:#555">{{ payment_method_display }}</p>
+              {% if financing_plan %}<p style="color:#999;font-size:.85rem;margin-top:6px"><i class="bx bx-check-circle" style="color:var(--success)"></i> Financing: {{ financing_plan.term_months }} months at {{ financing_plan.apr|floatformat:"-2" }}% APR</p>{% endif %}
+              {% if insurance_tier %}<p style="color:#999;font-size:.85rem;margin-top:6px"><i class="bx bx-check-circle" style="color:var(--success)"></i> Insurance: {{ insurance_tier.get_name_display }} ({{ insurance_tier.monthly_price|price }}/mo)</p>{% endif %}
+            </div>
+            <div style="display:flex;gap:10px">
+              <a href="{% url 'orders:checkout_payment' %}" class="btn-outline btn-lg"><i class="bx bx-left-arrow-alt"></i> Back</a>
+              <button type="submit" class="btn-volt btn-lg btn-block"><i class="bx bx-check-circle"></i>Place Order</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {% include "orders/_checkout_summary.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

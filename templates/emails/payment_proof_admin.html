@@ -1,0 +1,37 @@
+{% extends "emails/base_email.html" %}
+{% load catalog_extras %}
+
+{% block eyebrow_text %}Proof to Review{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 4px;font-size:22px;font-weight:800;">Payment proof awaiting review</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444;">
+  {{ order.contact_first_name }} {{ order.contact_last_name }} has uploaded proof of a transfer
+  for order <strong>{{ order.reference }}</strong>. The file is attached to this email.
+  Check it against the sales account, then confirm or reject it in the admin.
+</p>
+
+{% include "emails/_info_row.html" with label="Order" value=order.reference %}
+{% include "emails/_info_row.html" with label="Order total" value=order.total|price %}
+{% if proof.amount_declared %}
+{% include "emails/_info_row.html" with label="Amount declared" value=proof.amount_declared|price %}
+{% endif %}
+{% if proof.transaction_reference %}
+{% include "emails/_info_row.html" with label="Transaction reference" value=proof.transaction_reference %}
+{% endif %}
+{% include "emails/_info_row.html" with label="Customer" value=order.contact_email %}
+{% include "emails/_info_row.html" with label="Phone" value=order.contact_phone %}
+{% include "emails/_info_row.html" with label="File" value=proof.original_filename %}
+
+{% if proof.sender_note %}
+<p style="margin:18px 0 0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#666;">Customer note</p>
+<p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#444;">{{ proof.sender_note }}</p>
+{% endif %}
+
+{% include "emails/_button.html" with url=admin_url label="Review in Admin" %}
+
+<p style="margin:0;font-size:12px;line-height:1.6;color:#666;">
+  Confirming or rejecting from the admin emails the customer automatically — a rejection
+  sends them whatever you write in the review note, so say what they need to fix.
+</p>
+{% endblock %}

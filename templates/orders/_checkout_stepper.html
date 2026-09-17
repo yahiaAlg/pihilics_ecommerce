@@ -1,0 +1,13 @@
+{# Shared across all 4 checkout step templates so the stepper's "which #}
+{# step is done/current/upcoming" logic lives in one place (rule 4's #}
+{# spirit) instead of 4 copies of the same {% if %} chain. Expects #}
+{# `step` (1-4) in context — every checkout_*_view already passes it. #}
+<div class="stepper" id="stepper">
+  <div class="step{% if step == 1 %} active{% elif step > 1 %} complete{% endif %}" data-step="1"><div class="step-num">1</div><span class="step-label">Information</span></div>
+  <div class="step-line"></div>
+  <div class="step{% if step == 2 %} active{% elif step > 2 %} complete{% endif %}" data-step="2"><div class="step-num">2</div><span class="step-label">Delivery</span></div>
+  <div class="step-line"></div>
+  <div class="step{% if step == 3 %} active{% elif step > 3 %} complete{% endif %}" data-step="3"><div class="step-num">3</div><span class="step-label">Payment</span></div>
+  <div class="step-line"></div>
+  <div class="step{% if step == 4 %} active{% endif %}" data-step="4"><div class="step-num">4</div><span class="step-label">Review</span></div>
+</div>

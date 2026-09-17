@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load catalog_extras %}
+{% block title %}Tracking {{ order.reference }} — {{ site_name }}{% endblock %}
+{% block meta_description %}Your order history and tracking.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-x">
+    <div class="eyebrow">Order History</div>
+    <h1 class="section-title">My Orders</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'content:home' %}">Home</a><span class="sep">/</span>
+      <a href="{% url 'accounts:account' %}">Account</a><span class="sep">/</span>
+      <a href="{% url 'orders:order_list' %}">Orders</a><span class="sep">/</span>
+      <span>Tracking</span>
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container-x">
+    <div id="orderDetail">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="font-size:1.6rem;font-weight:800">Tracking: {{ order.reference }}</h2>
+          {# The reference always prints "Carrier: X • Y" because its mock data #}
+          {# always had both. Real ShipmentEvent.carrier/tracking_number are #}
+          {# blank until the order actually ships, so this line renders from #}
+          {# the first event that carries them and is omitted while pending, #}
+          {# rather than printing a stray bullet with empty values. #}
+          {% if carrier_event %}
+          <div style="color:#999;font-size:.85rem">Carrier: {{ carrier_event.carrier }} • {{ carrier_event.tracking_number }}</div>
+          {% else %}
+          <div style="color:#999;font-size:.85rem">Carrier details available once your order ships.</div>
+          {% endif %}
+        </div>
+        <a href="{% url 'orders:order_list' %}" class="btn-outline"><i class="bx bx-left-arrow-alt"></i>Back to Orders</a>
+      </div>
+
+      <div class="checkout-panel" style="background:var(--white);border:1px solid var(--line-light);padding:30px">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:24px">Delivery Status</h3>
+        <div class="tracking-timeline">
+          {% for event in events %}
+          {# Stage state mirrors the reference's own rule exactly: completed #}
+          {# stages are `done`; the single first not-yet-complete stage is #}
+          {# `current`; everything after is unclassed. The view flags which #}
+          {# one is current so no counting logic is duplicated in-template. #}
+          <div class="tracking-stage {% if event.is_complete %}done{% elif event.is_current %}current{% endif %}">
+            <div class="stage-dot"><i class="bx {% if event.is_complete %}bx-check{% elif event.is_current %}bx-time{% else %}bx-circle{% endif %}"></i></div>
+            <div>
+              <h6>{{ event.get_stage_display }}</h6>
+              <div class="stage-date">{% if event.occurred_at %}{{ event.occurred_at|date:"N j, Y • g:i A" }}{% else %}Pending{% endif %}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--line-light);padding:24px;margin-top:20px">
+        <h4 style="font-weight:800;margin-bottom:12px">Order Items</h4>
+        {% for item in order.items.all %}
+        <div class="order-review-item">
+          {% with image=item.product.images.first %}
+          {% if image %}<img src="{{ image.image.url }}" alt="">{% else %}<div style="width:60px;height:60px;background:var(--bone-2)"></div>{% endif %}
+          {% endwith %}
+          <div><h6>{{ item.product_name_snapshot }}</h6><div class="qty">Qty: {{ item.quantity }}</div></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
