@@ -143,18 +143,22 @@ ASGI_APPLICATION = "config.asgi.application"
 # ---------------------------------------------------------------------------
 # Defaults to SQLite, which is what every prior phase's `django check`,
 # `makemigrations --check`, and live admin/test-client runs have used.
-# Set DJANGO_DB_ENGINE=postgresql (plus the DJANGO_DB_* vars below) for a
-# real deployment -- no extra dj-database-url dependency required.
+# Set DJANGO_DB_ENGINE=mysql (plus the DJANGO_DB_* vars below) for a real
+# deployment against MySQL/MariaDB -- requires the `mysqlclient` package
+# (see requirements.txt).
 
-if os.environ.get("DJANGO_DB_ENGINE") == "postgresql":
+if os.environ.get("DJANGO_DB_ENGINE") == "mysql":
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
+            "ENGINE": "django.db.backends.mysql",
             "NAME": os.environ["DJANGO_DB_NAME"],
             "USER": os.environ.get("DJANGO_DB_USER", ""),
             "PASSWORD": os.environ.get("DJANGO_DB_PASSWORD", ""),
             "HOST": os.environ.get("DJANGO_DB_HOST", "localhost"),
-            "PORT": os.environ.get("DJANGO_DB_PORT", "5432"),
+            "PORT": os.environ.get("DJANGO_DB_PORT", "3306"),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+            },
         }
     }
 else:
