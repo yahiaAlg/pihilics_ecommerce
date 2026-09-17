@@ -87,139 +87,326 @@ STANDARD_TVA_RATE = Decimal("19.00")
 # in core.constants, so checkout works nationwide from the first run.
 SHIPPING_ZONES = [
     # (wilaya, home_fee, desk_fee, days_min, days_max)
-    ("16", Decimal("500.00"), Decimal("300.00"), 1, 2),    # Alger
-    ("09", Decimal("550.00"), Decimal("300.00"), 1, 2),    # Blida
-    ("19", Decimal("600.00"), Decimal("350.00"), 2, 3),    # Setif
-    ("06", Decimal("600.00"), Decimal("350.00"), 2, 3),    # Bejaia
-    ("31", Decimal("650.00"), Decimal("400.00"), 2, 3),    # Oran
-    ("25", Decimal("700.00"), Decimal("400.00"), 2, 4),    # Constantine
-    ("23", Decimal("700.00"), Decimal("400.00"), 2, 4),    # Annaba
-    ("05", Decimal("700.00"), Decimal("400.00"), 2, 4),    # Batna
-    ("30", Decimal("1000.00"), Decimal("600.00"), 4, 6),   # Ouargla
-    ("47", Decimal("1000.00"), Decimal("600.00"), 4, 6),   # Ghardaia
-    ("08", Decimal("1200.00"), Decimal("750.00"), 5, 7),   # Bechar
-    ("11", Decimal("1400.00"), Decimal("900.00"), 5, 8),   # Tamanrasset
+    ("16", Decimal("500.00"), Decimal("300.00"), 1, 2),  # Alger
+    ("09", Decimal("550.00"), Decimal("300.00"), 1, 2),  # Blida
+    ("19", Decimal("600.00"), Decimal("350.00"), 2, 3),  # Setif
+    ("06", Decimal("600.00"), Decimal("350.00"), 2, 3),  # Bejaia
+    ("31", Decimal("650.00"), Decimal("400.00"), 2, 3),  # Oran
+    ("25", Decimal("700.00"), Decimal("400.00"), 2, 4),  # Constantine
+    ("23", Decimal("700.00"), Decimal("400.00"), 2, 4),  # Annaba
+    ("05", Decimal("700.00"), Decimal("400.00"), 2, 4),  # Batna
+    ("30", Decimal("1000.00"), Decimal("600.00"), 4, 6),  # Ouargla
+    ("47", Decimal("1000.00"), Decimal("600.00"), 4, 6),  # Ghardaia
+    ("08", Decimal("1200.00"), Decimal("750.00"), 5, 7),  # Bechar
+    ("11", Decimal("1400.00"), Decimal("900.00"), 5, 8),  # Tamanrasset
 ]
 
 # Standard variant-group template applied to every motorcycle (spec 2.1:
 # Battery, Suspension, Wheels, each with priced upgrade options).
 VARIANT_GROUP_TEMPLATE = [
-    ("Battery", [("Standard", Decimal("0.00"), True), ("Extended Range", Decimal("270000.00"), False)]),
-    ("Suspension", [("Standard", Decimal("0.00"), True), ("Off-Road Kit", Decimal("97500.00"), False)]),
-    ("Wheels", [("Alloy", Decimal("0.00"), True), ("Spoked", Decimal("45000.00"), False)]),
+    (
+        "Battery",
+        [
+            ("Standard", Decimal("0.00"), True),
+            ("Extended Range", Decimal("270000.00"), False),
+        ],
+    ),
+    (
+        "Suspension",
+        [
+            ("Standard", Decimal("0.00"), True),
+            ("Off-Road Kit", Decimal("97500.00"), False),
+        ],
+    ),
+    (
+        "Wheels",
+        [("Alloy", Decimal("0.00"), True), ("Spoked", Decimal("45000.00"), False)],
+    ),
 ]
 
 MOTORCYCLES = [
     # -- Enduro --------------------------------------------------------
     {
-        "slug": "pihilics-rvx", "name": "Pihilics RVX", "category": "Enduro",
-        "price": "1875000.00", "badge": "best_seller",
+        "slug": "pihilics-rvx",
+        "name": "Pihilics RVX",
+        "category": "Enduro",
+        "price": "1875000.00",
+        "badge": "best_seller",
         "description": "Pihilics' flagship enduro: a lightweight electric off-roader built for technical trails.",
-        "features": ["Adjustable regenerative braking", "Removable battery pack", "IP67-rated electronics"],
-        "specs": {"Range": "180 km", "Power": "35 kW", "Weight": "128 kg", "Top Speed": "140 km/h", "Battery Capacity": "9.6 kWh", "Charge Time": "3.5 h"},
+        "features": [
+            "Adjustable regenerative braking",
+            "Removable battery pack",
+            "IP67-rated electronics",
+        ],
+        "specs": {
+            "Range": "180 km",
+            "Power": "35 kW",
+            "Weight": "128 kg",
+            "Top Speed": "140 km/h",
+            "Battery Capacity": "9.6 kWh",
+            "Charge Time": "3.5 h",
+        },
         "colors": [("Graphite Black", "#1a1a1a"), ("Racing Red", "#c81e2c")],
-        "stock": 30, "threshold": 5, "pre_order": False,
+        "stock": 30,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "pihilics-rvx-pro", "name": "Pihilics RVX Pro", "category": "Enduro",
-        "price": "2130000.00", "badge": "",
+        "slug": "pihilics-rvx-pro",
+        "name": "Pihilics RVX Pro",
+        "category": "Enduro",
+        "price": "2130000.00",
+        "badge": "",
         "description": "The RVX with a bigger pack and a stiffer chassis for serious off-road riders.",
-        "features": ["Uprated motor cooling", "Adjustable suspension", "Skid-plate standard"],
-        "specs": {"Range": "210 km", "Power": "42 kW", "Weight": "134 kg", "Top Speed": "150 km/h", "Battery Capacity": "11.4 kWh", "Charge Time": "4 h"},
+        "features": [
+            "Uprated motor cooling",
+            "Adjustable suspension",
+            "Skid-plate standard",
+        ],
+        "specs": {
+            "Range": "210 km",
+            "Power": "42 kW",
+            "Weight": "134 kg",
+            "Top Speed": "150 km/h",
+            "Battery Capacity": "11.4 kWh",
+            "Charge Time": "4 h",
+        },
         "colors": [("Graphite Black", "#1a1a1a"), ("Matte Olive", "#5b5f42")],
-        "stock": 18, "threshold": 5, "pre_order": False,
+        "stock": 18,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "enduro-r", "name": "Pihilics Enduro R", "category": "Enduro",
-        "price": "1695000.00", "badge": "",
+        "slug": "enduro-r",
+        "name": "Pihilics Enduro R",
+        "category": "Enduro",
+        "price": "1695000.00",
+        "badge": "",
         "description": "A nimble, entry-level enduro tuned for tight singletrack.",
-        "features": ["Lightweight trellis frame", "Trail-tuned suspension", "Quick-swap battery"],
-        "specs": {"Range": "150 km", "Power": "28 kW", "Weight": "119 kg", "Top Speed": "125 km/h", "Battery Capacity": "7.8 kWh", "Charge Time": "3 h"},
+        "features": [
+            "Lightweight trellis frame",
+            "Trail-tuned suspension",
+            "Quick-swap battery",
+        ],
+        "specs": {
+            "Range": "150 km",
+            "Power": "28 kW",
+            "Weight": "119 kg",
+            "Top Speed": "125 km/h",
+            "Battery Capacity": "7.8 kWh",
+            "Charge Time": "3 h",
+        },
         "colors": [("Racing Red", "#c81e2c"), ("Alpine White", "#f2f2f2")],
-        "stock": 22, "threshold": 5, "pre_order": False,
+        "stock": 22,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "enduro-sport", "name": "Pihilics Enduro Sport", "category": "Enduro",
-        "price": "1590000.00", "badge": "new",
+        "slug": "enduro-sport",
+        "name": "Pihilics Enduro Sport",
+        "category": "Enduro",
+        "price": "1590000.00",
+        "badge": "new",
         "description": "A sharper, street-legal take on the Enduro R with road-biased tyres.",
-        "features": ["Street-legal lighting kit", "Dual-purpose tyres", "Ride-mode selector"],
-        "specs": {"Range": "160 km", "Power": "30 kW", "Weight": "122 kg", "Top Speed": "130 km/h", "Battery Capacity": "8.2 kWh", "Charge Time": "3.2 h"},
+        "features": [
+            "Street-legal lighting kit",
+            "Dual-purpose tyres",
+            "Ride-mode selector",
+        ],
+        "specs": {
+            "Range": "160 km",
+            "Power": "30 kW",
+            "Weight": "122 kg",
+            "Top Speed": "130 km/h",
+            "Battery Capacity": "8.2 kWh",
+            "Charge Time": "3.2 h",
+        },
         "colors": [("Alpine White", "#f2f2f2"), ("Graphite Black", "#1a1a1a")],
-        "stock": 20, "threshold": 5, "pre_order": False,
+        "stock": 20,
+        "threshold": 5,
+        "pre_order": False,
     },
     # -- Trail -----------------------------------------------------------
     {
-        "slug": "trail-s", "name": "Pihilics Trail S", "category": "Trail",
-        "price": "1635000.00", "badge": "",
+        "slug": "trail-s",
+        "name": "Pihilics Trail S",
+        "category": "Trail",
+        "price": "1635000.00",
+        "badge": "",
         "description": "A friendly, approachable trail bike built for weekend exploring.",
-        "features": ["Low seat height", "Beginner ride mode", "Puncture-resistant tyres"],
-        "specs": {"Range": "165 km", "Power": "26 kW", "Weight": "115 kg", "Top Speed": "120 km/h", "Battery Capacity": "7.6 kWh", "Charge Time": "3 h"},
+        "features": [
+            "Low seat height",
+            "Beginner ride mode",
+            "Puncture-resistant tyres",
+        ],
+        "specs": {
+            "Range": "165 km",
+            "Power": "26 kW",
+            "Weight": "115 kg",
+            "Top Speed": "120 km/h",
+            "Battery Capacity": "7.6 kWh",
+            "Charge Time": "3 h",
+        },
         "colors": [("Forest Green", "#2f4f3a"), ("Alpine White", "#f2f2f2")],
-        "stock": 24, "threshold": 5, "pre_order": False,
+        "stock": 24,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "trail-l", "name": "Pihilics Trail L", "category": "Trail",
-        "price": "1815000.00", "badge": "",
+        "slug": "trail-l",
+        "name": "Pihilics Trail L",
+        "category": "Trail",
+        "price": "1815000.00",
+        "badge": "",
         "description": "The long-travel version of the Trail S, built for rougher terrain.",
         "features": ["Long-travel suspension", "Bash guard", "Wide footpegs"],
-        "specs": {"Range": "175 km", "Power": "31 kW", "Weight": "124 kg", "Top Speed": "135 km/h", "Battery Capacity": "8.8 kWh", "Charge Time": "3.4 h"},
+        "specs": {
+            "Range": "175 km",
+            "Power": "31 kW",
+            "Weight": "124 kg",
+            "Top Speed": "135 km/h",
+            "Battery Capacity": "8.8 kWh",
+            "Charge Time": "3.4 h",
+        },
         "colors": [("Forest Green", "#2f4f3a"), ("Graphite Black", "#1a1a1a")],
-        "stock": 16, "threshold": 5, "pre_order": False,
+        "stock": 16,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "trail-xr", "name": "Pihilics Trail XR", "category": "Trail",
-        "price": "2010000.00", "badge": "",
+        "slug": "trail-xr",
+        "name": "Pihilics Trail XR",
+        "category": "Trail",
+        "price": "2010000.00",
+        "badge": "",
         "description": "The range-topping Trail, with the Adventure line's motor in a lighter chassis.",
-        "features": ["Adventure-spec motor", "Lightweight subframe", "Larger fuel-tank-style battery shroud"],
-        "specs": {"Range": "200 km", "Power": "38 kW", "Weight": "130 kg", "Top Speed": "145 km/h", "Battery Capacity": "10.6 kWh", "Charge Time": "3.8 h"},
+        "features": [
+            "Adventure-spec motor",
+            "Lightweight subframe",
+            "Larger fuel-tank-style battery shroud",
+        ],
+        "specs": {
+            "Range": "200 km",
+            "Power": "38 kW",
+            "Weight": "130 kg",
+            "Top Speed": "145 km/h",
+            "Battery Capacity": "10.6 kWh",
+            "Charge Time": "3.8 h",
+        },
         "colors": [("Matte Olive", "#5b5f42"), ("Alpine White", "#f2f2f2")],
-        "stock": 12, "threshold": 5, "pre_order": True,
+        "stock": 12,
+        "threshold": 5,
+        "pre_order": True,
     },
     # -- Adventure ---------------------------------------------------------
     {
-        "slug": "adventure-x", "name": "Pihilics Adventure X", "category": "Adventure",
-        "price": "2370000.00", "badge": "",
+        "slug": "adventure-x",
+        "name": "Pihilics Adventure X",
+        "category": "Adventure",
+        "price": "2370000.00",
+        "badge": "",
         "description": "A long-range electric adventure bike built for multi-day touring off the grid.",
         "features": ["Long-range battery", "Integrated luggage mounts", "Heated grips"],
-        "specs": {"Range": "260 km", "Power": "40 kW", "Weight": "155 kg", "Top Speed": "150 km/h", "Battery Capacity": "13.2 kWh", "Charge Time": "4.5 h"},
+        "specs": {
+            "Range": "260 km",
+            "Power": "40 kW",
+            "Weight": "155 kg",
+            "Top Speed": "150 km/h",
+            "Battery Capacity": "13.2 kWh",
+            "Charge Time": "4.5 h",
+        },
         "colors": [("Desert Sand", "#c9b28c"), ("Graphite Black", "#1a1a1a")],
-        "stock": 14, "threshold": 5, "pre_order": False,
+        "stock": 14,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "adventure-l", "name": "Pihilics Adventure L", "category": "Adventure",
-        "price": "2535000.00", "badge": "",
+        "slug": "adventure-l",
+        "name": "Pihilics Adventure L",
+        "category": "Adventure",
+        "price": "2535000.00",
+        "badge": "",
         "description": "The top-spec Adventure, with a bigger pack for true multi-day range.",
-        "features": ["Largest available battery", "Full luggage system compatibility", "Cruise control"],
-        "specs": {"Range": "300 km", "Power": "44 kW", "Weight": "162 kg", "Top Speed": "155 km/h", "Battery Capacity": "15.6 kWh", "Charge Time": "5 h"},
+        "features": [
+            "Largest available battery",
+            "Full luggage system compatibility",
+            "Cruise control",
+        ],
+        "specs": {
+            "Range": "300 km",
+            "Power": "44 kW",
+            "Weight": "162 kg",
+            "Top Speed": "155 km/h",
+            "Battery Capacity": "15.6 kWh",
+            "Charge Time": "5 h",
+        },
         "colors": [("Desert Sand", "#c9b28c"), ("Alpine White", "#f2f2f2")],
-        "stock": 3, "threshold": 5, "pre_order": False,
+        "stock": 3,
+        "threshold": 5,
+        "pre_order": False,
     },
     # -- Performance -------------------------------------------------------
     {
-        "slug": "urban-e", "name": "Pihilics Urban E", "category": "Performance",
-        "price": "1470000.00", "old_price": "1575000.00", "badge": "sale",
+        "slug": "urban-e",
+        "name": "Pihilics Urban E",
+        "category": "Performance",
+        "price": "1470000.00",
+        "old_price": "1575000.00",
+        "badge": "sale",
         "description": "Pihilics' most affordable model: a street-legal commuter built for city riding.",
-        "features": ["Compact frame", "Fast-charge capable", "App-connected ride stats"],
-        "specs": {"Range": "120 km", "Power": "22 kW", "Weight": "108 kg", "Top Speed": "110 km/h", "Battery Capacity": "6.2 kWh", "Charge Time": "2.5 h"},
+        "features": [
+            "Compact frame",
+            "Fast-charge capable",
+            "App-connected ride stats",
+        ],
+        "specs": {
+            "Range": "120 km",
+            "Power": "22 kW",
+            "Weight": "108 kg",
+            "Top Speed": "110 km/h",
+            "Battery Capacity": "6.2 kWh",
+            "Charge Time": "2.5 h",
+        },
         "colors": [("Racing Red", "#c81e2c"), ("Alpine White", "#f2f2f2")],
-        "stock": 40, "threshold": 5, "pre_order": False,
+        "stock": 40,
+        "threshold": 5,
+        "pre_order": False,
     },
     {
-        "slug": "performance-rs", "name": "Pihilics Performance RS", "category": "Performance",
-        "price": "3225000.00", "badge": "limited",
+        "slug": "performance-rs",
+        "name": "Pihilics Performance RS",
+        "category": "Performance",
+        "price": "3225000.00",
+        "badge": "limited",
         "description": "A 200-unit limited edition track-focused electric superbike.",
-        "features": ["Track-tuned motor controller", "Carbon bodywork", "Numbered plaque, 1 of 200"],
-        "specs": {"Range": "140 km", "Power": "70 kW", "Weight": "148 kg", "Top Speed": "220 km/h", "Battery Capacity": "11.8 kWh", "Charge Time": "3 h"},
+        "features": [
+            "Track-tuned motor controller",
+            "Carbon bodywork",
+            "Numbered plaque, 1 of 200",
+        ],
+        "specs": {
+            "Range": "140 km",
+            "Power": "70 kW",
+            "Weight": "148 kg",
+            "Top Speed": "220 km/h",
+            "Battery Capacity": "11.8 kWh",
+            "Charge Time": "3 h",
+        },
         "colors": [("Racing Red", "#c81e2c"), ("Graphite Black", "#1a1a1a")],
-        "stock": 45, "threshold": 5, "pre_order": False,
+        "stock": 45,
+        "threshold": 5,
+        "pre_order": False,
     },
 ]
 
 ACCESSORIES = [
     # -- Riding Gear ---------------------------------------------------
     {
-        "slug": "riding-jacket", "name": "Pihilics Riding Jacket", "category": "Riding Gear",
-        "price": "52500.00", "badge": "best_seller",
+        "slug": "riding-jacket",
+        "name": "Pihilics Riding Jacket",
+        "category": "Riding Gear",
+        "price": "52500.00",
+        "badge": "best_seller",
         "description": "Abrasion-resistant riding jacket with removable armour and ventilation panels.",
         "features": ["CE-rated armour", "Waterproof liner", "Reflective panels"],
         "specs": {"Material": "600D textile", "Weight": "1.4 kg"},
@@ -227,17 +414,27 @@ ACCESSORIES = [
         "colors": [("Graphite Black", "#1a1a1a")],
     },
     {
-        "slug": "carbon-helmet", "name": "Pihilics Carbon Helmet", "category": "Riding Gear",
-        "price": "64500.00", "badge": "new",
+        "slug": "carbon-helmet",
+        "name": "Pihilics Carbon Helmet",
+        "category": "Riding Gear",
+        "price": "64500.00",
+        "badge": "new",
         "description": "A lightweight carbon-shell full-face helmet with a drop-down sun visor.",
-        "features": ["Carbon-fibre shell", "Drop-down sun visor", "Removable, washable liner"],
+        "features": [
+            "Carbon-fibre shell",
+            "Drop-down sun visor",
+            "Removable, washable liner",
+        ],
         "specs": {"Material": "Carbon fibre", "Weight": "1.3 kg"},
         "sizes": ["S", "M", "L", "XL"],
         "colors": [("Graphite Black", "#1a1a1a"), ("Alpine White", "#f2f2f2")],
     },
     {
-        "slug": "adventure-goggles", "name": "Pihilics Adventure Goggles", "category": "Riding Gear",
-        "price": "13500.00", "badge": "",
+        "slug": "adventure-goggles",
+        "name": "Pihilics Adventure Goggles",
+        "category": "Riding Gear",
+        "price": "13500.00",
+        "badge": "",
         "description": "Scratch-resistant riding goggles with a tear-off-compatible lens.",
         "features": ["Anti-fog coating", "Tear-off compatible", "Foam-padded frame"],
         "specs": {"Weight": "0.15 kg"},
@@ -245,119 +442,299 @@ ACCESSORIES = [
         "colors": [],
     },
     {
-        "slug": "touring-gloves", "name": "Pihilics Touring Gloves", "category": "Riding Gear",
-        "price": "12000.00", "badge": "",
+        "slug": "touring-gloves",
+        "name": "Pihilics Touring Gloves",
+        "category": "Riding Gear",
+        "price": "12000.00",
+        "badge": "",
         "description": "All-season touring gloves with knuckle protection and touchscreen fingertips.",
-        "features": ["Knuckle armour", "Touchscreen-compatible fingertips", "Waterproof membrane"],
+        "features": [
+            "Knuckle armour",
+            "Touchscreen-compatible fingertips",
+            "Waterproof membrane",
+        ],
         "specs": {"Material": "Leather / textile blend"},
         "sizes": ["S", "M", "L", "XL"],
         "colors": [("Graphite Black", "#1a1a1a")],
     },
     # -- Chargers ----------------------------------------------------------
     {
-        "slug": "fast-home-charger", "name": "Pihilics Fast Home Charger", "category": "Chargers",
-        "price": "90000.00", "badge": "",
+        "slug": "fast-home-charger",
+        "name": "Pihilics Fast Home Charger",
+        "category": "Chargers",
+        "price": "90000.00",
+        "badge": "",
         "description": "A wall-mounted fast charger that cuts home charge times roughly in half.",
-        "features": ["Full charge in under 2 hours", "Weatherproof enclosure", "Wi-Fi status app"],
+        "features": [
+            "Full charge in under 2 hours",
+            "Weatherproof enclosure",
+            "Wi-Fi status app",
+        ],
         "specs": {"Output": "7.4 kW", "Weight": "4.2 kg"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     {
-        "slug": "portable-charger-kit", "name": "Pihilics Portable Charger Kit", "category": "Chargers",
-        "price": "37500.00", "badge": "",
+        "slug": "portable-charger-kit",
+        "name": "Pihilics Portable Charger Kit",
+        "category": "Chargers",
+        "price": "37500.00",
+        "badge": "",
         "description": "A compact charger that packs into the underseat storage for on-the-road top-ups.",
-        "features": ["Fits underseat storage", "Standard household plug", "Carry case included"],
+        "features": [
+            "Fits underseat storage",
+            "Standard household plug",
+            "Carry case included",
+        ],
         "specs": {"Output": "2.2 kW", "Weight": "1.8 kg"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     # -- Batteries -----------------------------------------------------
     {
-        "slug": "extended-battery", "name": "Extended Battery Pack", "category": "Batteries",
-        "price": "330000.00", "old_price": "370000.00", "badge": "sale",
+        "slug": "extended-battery",
+        "name": "Extended Battery Pack",
+        "category": "Batteries",
+        "price": "330000.00",
+        "old_price": "370000.00",
+        "badge": "sale",
         "description": "Drop-in extended-capacity battery pack, compatible with the full Pihilics lineup.",
-        "features": ["+40% range", "Same footprint as stock pack", "5-year capacity warranty"],
+        "features": [
+            "+40% range",
+            "Same footprint as stock pack",
+            "5-year capacity warranty",
+        ],
         "specs": {"Capacity": "13.2 kWh", "Weight": "38 kg"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     {
-        "slug": "spare-battery-cell", "name": "Spare Battery Cell", "category": "Batteries",
-        "price": "220000.00", "badge": "",
+        "slug": "spare-battery-cell",
+        "name": "Spare Battery Cell",
+        "category": "Batteries",
+        "price": "220000.00",
+        "badge": "",
         "description": "A standard-capacity spare pack for riders who want a fast swap instead of a wait.",
         "features": ["Hot-swappable", "Standard capacity", "5-year capacity warranty"],
         "specs": {"Capacity": "9.6 kWh", "Weight": "29 kg"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     # -- Protection ----------------------------------------------------
     {
-        "slug": "protection-kit", "name": "Engine Protection Kit", "category": "Protection",
-        "price": "28500.00", "badge": "",
+        "slug": "protection-kit",
+        "name": "Engine Protection Kit",
+        "category": "Protection",
+        "price": "28500.00",
+        "badge": "",
         "description": "Bolt-on bash guards for the motor casing and lower frame rails.",
         "features": ["Motor casing guard", "Frame rail sliders", "Tool-free install"],
         "specs": {"Material": "Aluminium"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     {
-        "slug": "frame-guard-set", "name": "Frame Guard Set", "category": "Protection",
-        "price": "19500.00", "badge": "",
+        "slug": "frame-guard-set",
+        "name": "Frame Guard Set",
+        "category": "Protection",
+        "price": "19500.00",
+        "badge": "",
         "description": "Adhesive frame and swingarm guards that protect paint from trail debris.",
         "features": ["3M adhesive backing", "Precision-cut fitment", "Matte finish"],
         "specs": {"Material": "Polyurethane film"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     # -- Parts -------------------------------------------------------------
     {
-        "slug": "performance-brake-pads", "name": "Performance Brake Pads", "category": "Parts",
-        "price": "15000.00", "badge": "",
+        "slug": "performance-brake-pads",
+        "name": "Performance Brake Pads",
+        "category": "Parts",
+        "price": "15000.00",
+        "badge": "",
         "description": "Sintered replacement brake pads for stronger, more consistent stopping power.",
-        "features": ["Sintered compound", "Reduced fade under heavy use", "Direct OEM fit"],
+        "features": [
+            "Sintered compound",
+            "Reduced fade under heavy use",
+            "Direct OEM fit",
+        ],
         "specs": {"Compound": "Sintered metal"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
     {
-        "slug": "all-terrain-tire-set", "name": "All-Terrain Tire Set", "category": "Parts",
-        "price": "39000.00", "badge": "",
+        "slug": "all-terrain-tire-set",
+        "name": "All-Terrain Tire Set",
+        "category": "Parts",
+        "price": "39000.00",
+        "badge": "",
         "description": "A front-and-rear tyre set tuned for mixed on/off-road grip.",
-        "features": ["50/50 on/off-road tread", "Reinforced sidewalls", "Front + rear pair"],
+        "features": [
+            "50/50 on/off-road tread",
+            "Reinforced sidewalls",
+            "Front + rear pair",
+        ],
         "specs": {"Type": "Dual-sport"},
-        "sizes": [], "colors": [],
+        "sizes": [],
+        "colors": [],
     },
 ]
 
 DEALERS = [
-    {"slug": "pihilics-alger", "name": "Pihilics Alger", "city": "Alger", "wilaya": "16", "address": "12 Rue Didouche Mourad, 16000 Alger Centre, Alger", "phone": "+213 21 55 01 01", "lat": "36.753768", "lng": "3.058756"},
-    {"slug": "pihilics-setif", "name": "Pihilics Setif", "city": "Setif", "wilaya": "19", "address": "Cite des Freres Meslem, Route de Bejaia, 19000 Setif", "phone": "+213 36 55 01 02", "lat": "36.190073", "lng": "5.408341"},
-    {"slug": "pihilics-oran", "name": "Pihilics Oran", "city": "Oran", "wilaya": "31", "address": "45 Boulevard de l'ALN, 31000 Oran", "phone": "+213 41 55 01 03", "lat": "35.699739", "lng": "-0.633245"},
-    {"slug": "pihilics-constantine", "name": "Pihilics Constantine", "city": "Constantine", "wilaya": "25", "address": "8 Rue Larbi Ben M'hidi, 25000 Constantine", "phone": "+213 31 55 01 04", "lat": "36.365000", "lng": "6.614722"},
-    {"slug": "pihilics-annaba", "name": "Pihilics Annaba", "city": "Annaba", "wilaya": "23", "address": "22 Cours de la Revolution, 23000 Annaba", "phone": "+213 38 55 01 05", "lat": "36.897400", "lng": "7.765400"},
-    {"slug": "pihilics-bejaia", "name": "Pihilics Bejaia", "city": "Bejaia", "wilaya": "06", "address": "5 Rue de la Liberte, 06000 Bejaia", "phone": "+213 34 55 01 06", "lat": "36.751200", "lng": "5.056000"},
-    {"slug": "pihilics-blida", "name": "Pihilics Blida", "city": "Blida", "wilaya": "09", "address": "17 Avenue Ali Boumendjel, 09000 Blida", "phone": "+213 25 55 01 07", "lat": "36.470100", "lng": "2.829000"},
-    {"slug": "pihilics-ouargla", "name": "Pihilics Ouargla", "city": "Ouargla", "wilaya": "30", "address": "Route de Ghardaia, 30000 Ouargla", "phone": "+213 29 55 01 08", "lat": "31.949200", "lng": "5.325500"},
+    {
+        "slug": "pihilics-alger",
+        "name": "Pihilics Alger",
+        "city": "Alger",
+        "wilaya": "16",
+        "address": "12 Rue Didouche Mourad, 16000 Alger Centre, Alger",
+        "phone": "+213 21 55 01 01",
+        "lat": "36.753768",
+        "lng": "3.058756",
+    },
+    {
+        "slug": "pihilics-setif",
+        "name": "Pihilics Setif",
+        "city": "Setif",
+        "wilaya": "19",
+        "address": "Cite des Freres Meslem, Route de Bejaia, 19000 Setif",
+        "phone": "+213 36 55 01 02",
+        "lat": "36.190073",
+        "lng": "5.408341",
+    },
+    {
+        "slug": "pihilics-oran",
+        "name": "Pihilics Oran",
+        "city": "Oran",
+        "wilaya": "31",
+        "address": "45 Boulevard de l'ALN, 31000 Oran",
+        "phone": "+213 41 55 01 03",
+        "lat": "35.699739",
+        "lng": "-0.633245",
+    },
+    {
+        "slug": "pihilics-constantine",
+        "name": "Pihilics Constantine",
+        "city": "Constantine",
+        "wilaya": "25",
+        "address": "8 Rue Larbi Ben M'hidi, 25000 Constantine",
+        "phone": "+213 31 55 01 04",
+        "lat": "36.365000",
+        "lng": "6.614722",
+    },
+    {
+        "slug": "pihilics-annaba",
+        "name": "Pihilics Annaba",
+        "city": "Annaba",
+        "wilaya": "23",
+        "address": "22 Cours de la Revolution, 23000 Annaba",
+        "phone": "+213 38 55 01 05",
+        "lat": "36.897400",
+        "lng": "7.765400",
+    },
+    {
+        "slug": "pihilics-bejaia",
+        "name": "Pihilics Bejaia",
+        "city": "Bejaia",
+        "wilaya": "06",
+        "address": "5 Rue de la Liberte, 06000 Bejaia",
+        "phone": "+213 34 55 01 06",
+        "lat": "36.751200",
+        "lng": "5.056000",
+    },
+    {
+        "slug": "pihilics-blida",
+        "name": "Pihilics Blida",
+        "city": "Blida",
+        "wilaya": "09",
+        "address": "17 Avenue Ali Boumendjel, 09000 Blida",
+        "phone": "+213 25 55 01 07",
+        "lat": "36.470100",
+        "lng": "2.829000",
+    },
+    {
+        "slug": "pihilics-ouargla",
+        "name": "Pihilics Ouargla",
+        "city": "Ouargla",
+        "wilaya": "30",
+        "address": "Route de Ghardaia, 30000 Ouargla",
+        "phone": "+213 29 55 01 08",
+        "lat": "31.949200",
+        "lng": "5.325500",
+    },
 ]
 
 FAQS = {
     FAQCategory.ORDERS_DELIVERY: [
-        ("How long does delivery take?", "Standard delivery typically arrives within 5-10 business days; Express delivery arrives within 2-4 business days."),
-        ("Can I change or cancel my order after placing it?", "Contact Support as soon as possible. Orders that haven't yet entered manufacturing can usually be changed or cancelled."),
-        ("Do you deliver to every wilaya?", "Yes. We deliver to all 58 wilayas, either to your address or to your courier's agency (stopdesk). The fee and delivery window depend on the wilaya and are shown at checkout."),
-        ("Will I get tracking information?", "Yes. Once your order ships, its tracking number and carrier appear on the Order Detail page in your account."),
+        (
+            "How long does delivery take?",
+            "Standard delivery typically arrives within 5-10 business days; Express delivery arrives within 2-4 business days.",
+        ),
+        (
+            "Can I change or cancel my order after placing it?",
+            "Contact Support as soon as possible. Orders that haven't yet entered manufacturing can usually be changed or cancelled.",
+        ),
+        (
+            "Do you deliver to every wilaya?",
+            "Yes. We deliver to all 58 wilayas, either to your address or to your courier's agency (stopdesk). The fee and delivery window depend on the wilaya and are shown at checkout.",
+        ),
+        (
+            "Will I get tracking information?",
+            "Yes. Once your order ships, its tracking number and carrier appear on the Order Detail page in your account.",
+        ),
     ],
     FAQCategory.BATTERY_CHARGING: [
-        ("How long does a full charge take?", "It depends on the model and charger; most Pihilics packs reach a full charge in 3-5 hours on a standard charger, or under 2 hours with the Fast Home Charger."),
-        ("How much range should I expect to lose over time?", "Pihilics battery packs are warrantied to retain at least 80% of original capacity for 5 years under normal use."),
-        ("Can I swap my battery for a bigger one later?", "Yes, the Extended Battery Pack is a drop-in replacement for the standard pack on every current model."),
-        ("Is it safe to charge overnight?", "Yes. Every Pihilics charger and battery pack includes over-charge and thermal cut-off protection."),
+        (
+            "How long does a full charge take?",
+            "It depends on the model and charger; most Pihilics packs reach a full charge in 3-5 hours on a standard charger, or under 2 hours with the Fast Home Charger.",
+        ),
+        (
+            "How much range should I expect to lose over time?",
+            "Pihilics battery packs are warrantied to retain at least 80% of original capacity for 5 years under normal use.",
+        ),
+        (
+            "Can I swap my battery for a bigger one later?",
+            "Yes, the Extended Battery Pack is a drop-in replacement for the standard pack on every current model.",
+        ),
+        (
+            "Is it safe to charge overnight?",
+            "Yes. Every Pihilics charger and battery pack includes over-charge and thermal cut-off protection.",
+        ),
     ],
     FAQCategory.WARRANTY_SERVICE: [
-        ("What does the standard warranty cover?", "Every new Pihilics motorcycle includes a 2-year manufacturer's warranty covering the motor, controller, and frame."),
-        ("How often should I service my motorcycle?", "We recommend a Routine Check every 5,000 km, with a Battery Service or Major Service as your Garage page suggests based on usage."),
-        ("Can I book a service without owning an Pihilics motorcycle?", "Service bookings are tied to a Garage entry, so the motorcycle needs to be registered to your account first."),
-        ("Does insurance cover accidental damage?", "The Comprehensive and Premium insurance tiers both cover accidental damage; Essential covers liability, theft, and fire/natural disaster only."),
+        (
+            "What does the standard warranty cover?",
+            "Every new Pihilics motorcycle includes a 2-year manufacturer's warranty covering the motor, controller, and frame.",
+        ),
+        (
+            "How often should I service my motorcycle?",
+            "We recommend a Routine Check every 5,000 km, with a Battery Service or Major Service as your Garage page suggests based on usage.",
+        ),
+        (
+            "Can I book a service without owning an Pihilics motorcycle?",
+            "Service bookings are tied to a Garage entry, so the motorcycle needs to be registered to your account first.",
+        ),
+        (
+            "Does insurance cover accidental damage?",
+            "The Comprehensive and Premium insurance tiers both cover accidental damage; Essential covers liability, theft, and fire/natural disaster only.",
+        ),
     ],
     FAQCategory.TEST_RIDES_PURCHASING: [
-        ("Do I need a motorcycle licence to book a test ride?", "Yes, a valid motorcycle licence number is required when booking, and you'll need to bring the physical licence to the appointment."),
-        ("Can I test ride any model?", "Test rides are available for our current in-stock and pre-order highlight models at each dealer; availability varies by location."),
-        ("Is financing available at checkout?", "Yes, 12/24/36-month financing plans are selectable at Checkout, alongside the three insurance tiers."),
-        ("What happens after I submit a test ride request?", "The selected dealer receives your request and confirms an exact time; you'll get a confirmation once it's approved."),
+        (
+            "Do I need a motorcycle licence to book a test ride?",
+            "Yes, a valid motorcycle licence number is required when booking, and you'll need to bring the physical licence to the appointment.",
+        ),
+        (
+            "Can I test ride any model?",
+            "Test rides are available for our current in-stock and pre-order highlight models at each dealer; availability varies by location.",
+        ),
+        (
+            "Is financing available at checkout?",
+            "Yes, 12/24/36-month financing plans are selectable at Checkout, alongside the three insurance tiers.",
+        ),
+        (
+            "What happens after I submit a test ride request?",
+            "The selected dealer receives your request and confirms an exact time; you'll get a confirmation once it's approved.",
+        ),
     ],
 }
 
@@ -403,15 +780,27 @@ STORIES = [
 
 
 class Command(BaseCommand):
-    help = "Seed a comprehensive, spec-matching demo dataset for the Pihilics storefront."
+    help = (
+        "Seed a comprehensive, spec-matching demo dataset for the Pihilics storefront."
+    )
 
     def add_arguments(self, parser):
-        parser.add_argument("--no-images", action="store_true", help="Skip fetching placeholder product photos.")
-        parser.add_argument("--flush", action="store_true", help="Delete previously-seeded data before reseeding.")
+        parser.add_argument(
+            "--no-images",
+            action="store_true",
+            help="Skip fetching placeholder product photos.",
+        )
+        parser.add_argument(
+            "--flush",
+            action="store_true",
+            help="Delete previously-seeded data before reseeding.",
+        )
 
     def handle(self, *args, **options):
         self.with_images = not options["no_images"]
-        self.rng = random.Random(2026)  # fixed seed -> reproducible reviews/demo content
+        self.rng = random.Random(
+            2026
+        )  # fixed seed -> reproducible reviews/demo content
 
         with transaction.atomic():
             if options["flush"]:
@@ -514,31 +903,77 @@ class Command(BaseCommand):
             ShippingZone.objects.get_or_create(
                 wilaya=wilaya,
                 defaults={
-                    "home_fee": home_fee, "desk_fee": desk_fee,
-                    "delivery_days_min": days_min, "delivery_days_max": days_max,
+                    "home_fee": home_fee,
+                    "desk_fee": desk_fee,
+                    "delivery_days_min": days_min,
+                    "delivery_days_max": days_max,
                 },
             )
         self.stdout.write("  company info + shipping zones")
 
     def seed_financing_and_insurance(self):
         plans = [
-            {"term_months": 12, "apr": Decimal("4.90"), "zero_down_option": False, "is_featured": False,
-             "description": "Short-term financing with a fixed 4.90% APR."},
-            {"term_months": 24, "apr": Decimal("0.00"), "zero_down_option": True, "is_featured": True,
-             "description": "Our most popular plan: 0% APR with a zero-down option."},
-            {"term_months": 36, "apr": Decimal("3.90"), "zero_down_option": False, "is_featured": False,
-             "description": "Lower monthly payments over a longer term at 3.90% APR."},
+            {
+                "term_months": 12,
+                "apr": Decimal("4.90"),
+                "zero_down_option": False,
+                "is_featured": False,
+                "description": "Short-term financing with a fixed 4.90% APR.",
+            },
+            {
+                "term_months": 24,
+                "apr": Decimal("0.00"),
+                "zero_down_option": True,
+                "is_featured": True,
+                "description": "Our most popular plan: 0% APR with a zero-down option.",
+            },
+            {
+                "term_months": 36,
+                "apr": Decimal("3.90"),
+                "zero_down_option": False,
+                "is_featured": False,
+                "description": "Lower monthly payments over a longer term at 3.90% APR.",
+            },
         ]
         for data in plans:
-            FinancingPlan.objects.get_or_create(term_months=data["term_months"], defaults=data)
+            FinancingPlan.objects.get_or_create(
+                term_months=data["term_months"], defaults=data
+            )
 
         tiers = [
-            {"name": InsuranceTierName.ESSENTIAL, "monthly_price": Decimal("2900.00"), "is_featured": False, "excess_amount": None,
-             "features": ["Liability coverage", "Theft protection", "Fire & natural disaster cover"]},
-            {"name": InsuranceTierName.COMPREHENSIVE, "monthly_price": Decimal("5800.00"), "is_featured": True, "excess_amount": Decimal("37000.00"),
-             "features": ["Everything in Essential", "Battery degradation cover", "Accidental damage cover (37,000 DA excess)"]},
-            {"name": InsuranceTierName.PREMIUM, "monthly_price": Decimal("8800.00"), "is_featured": False, "excess_amount": Decimal("0.00"),
-             "features": ["Everything in Comprehensive", "Zero-excess accidental damage", "Up to 220,000 DA helmet & gear cover"]},
+            {
+                "name": InsuranceTierName.ESSENTIAL,
+                "monthly_price": Decimal("2900.00"),
+                "is_featured": False,
+                "excess_amount": None,
+                "features": [
+                    "Liability coverage",
+                    "Theft protection",
+                    "Fire & natural disaster cover",
+                ],
+            },
+            {
+                "name": InsuranceTierName.COMPREHENSIVE,
+                "monthly_price": Decimal("5800.00"),
+                "is_featured": True,
+                "excess_amount": Decimal("37000.00"),
+                "features": [
+                    "Everything in Essential",
+                    "Battery degradation cover",
+                    "Accidental damage cover (37,000 DA excess)",
+                ],
+            },
+            {
+                "name": InsuranceTierName.PREMIUM,
+                "monthly_price": Decimal("8800.00"),
+                "is_featured": False,
+                "excess_amount": Decimal("0.00"),
+                "features": [
+                    "Everything in Comprehensive",
+                    "Zero-excess accidental damage",
+                    "Up to 220,000 DA helmet & gear cover",
+                ],
+            },
         ]
         for data in tiers:
             InsuranceTier.objects.get_or_create(name=data["name"], defaults=data)
@@ -546,13 +981,27 @@ class Command(BaseCommand):
 
     def seed_service_tiers(self):
         tiers = [
-            {"name": ServiceTierName.ROUTINE_CHECK, "price": Decimal("13000.00"), "description": "Brakes, tyres, and software check."},
-            {"name": ServiceTierName.BATTERY_SERVICE, "price": Decimal("19000.00"), "description": "Battery health check and cell balancing."},
-            {"name": ServiceTierName.MAJOR_SERVICE, "price": Decimal("37000.00"), "description": "Full inspection and tune."},
+            {
+                "name": ServiceTierName.ROUTINE_CHECK,
+                "price": Decimal("13000.00"),
+                "description": "Brakes, tyres, and software check.",
+            },
+            {
+                "name": ServiceTierName.BATTERY_SERVICE,
+                "price": Decimal("19000.00"),
+                "description": "Battery health check and cell balancing.",
+            },
+            {
+                "name": ServiceTierName.MAJOR_SERVICE,
+                "price": Decimal("37000.00"),
+                "description": "Full inspection and tune.",
+            },
         ]
         result = {}
         for data in tiers:
-            tier, _ = ServiceTier.objects.get_or_create(name=data["name"], defaults=data)
+            tier, _ = ServiceTier.objects.get_or_create(
+                name=data["name"], defaults=data
+            )
             result[data["name"]] = tier
         self.stdout.write("  service tiers")
         return result
@@ -562,19 +1011,29 @@ class Command(BaseCommand):
     def seed_categories(self):
         categories = {}
         for name in ["Enduro", "Trail", "Adventure", "Performance"]:
-            categories[name] = Category.objects.get_or_create(name=name, product_type=ProductType.MOTORCYCLE)[0]
+            categories[name] = Category.objects.get_or_create(
+                name=name, product_type=ProductType.MOTORCYCLE
+            )[0]
         for name in ["Riding Gear", "Chargers", "Batteries", "Protection", "Parts"]:
-            categories[name] = Category.objects.get_or_create(name=name, product_type=ProductType.ACCESSORY)[0]
+            categories[name] = Category.objects.get_or_create(
+                name=name, product_type=ProductType.ACCESSORY
+            )[0]
         self.stdout.write("  categories")
         return categories
 
     def seed_products(self, categories):
         products = {}
         for data in MOTORCYCLES:
-            products[data["slug"]] = self._create_product(data, ProductType.MOTORCYCLE, categories, with_variants=True)
+            products[data["slug"]] = self._create_product(
+                data, ProductType.MOTORCYCLE, categories, with_variants=True
+            )
         for data in ACCESSORIES:
-            products[data["slug"]] = self._create_product(data, ProductType.ACCESSORY, categories, with_variants=False)
-        self.stdout.write(f"  {len(products)} products ({len(MOTORCYCLES)} motorcycles, {len(ACCESSORIES)} accessories)")
+            products[data["slug"]] = self._create_product(
+                data, ProductType.ACCESSORY, categories, with_variants=False
+            )
+        self.stdout.write(
+            f"  {len(products)} products ({len(MOTORCYCLES)} motorcycles, {len(ACCESSORIES)} accessories)"
+        )
         return products
 
     def _create_product(self, data, product_type, categories, with_variants):
@@ -585,7 +1044,9 @@ class Command(BaseCommand):
                 "product_type": product_type,
                 "category": categories[data["category"]],
                 "price": Decimal(data["price"]),
-                "old_price": Decimal(data["old_price"]) if data.get("old_price") else None,
+                "old_price": (
+                    Decimal(data["old_price"]) if data.get("old_price") else None
+                ),
                 "description": data["description"],
                 "features": data["features"],
                 "badge": data.get("badge", ""),
@@ -598,34 +1059,73 @@ class Command(BaseCommand):
             return product
 
         for color_name, hex_value in data.get("colors", []):
-            ProductColor.objects.get_or_create(product=product, name=color_name, defaults={"hex_value": hex_value})
+            ProductColor.objects.get_or_create(
+                product=product, name=color_name, defaults={"hex_value": hex_value}
+            )
 
         for label in data.get("sizes", []):
             ProductSize.objects.get_or_create(product=product, label=label)
 
         for sort_order, (key, value) in enumerate(data["specs"].items()):
-            ProductSpec.objects.get_or_create(product=product, key=key, defaults={"value": value, "sort_order": sort_order})
+            ProductSpec.objects.get_or_create(
+                product=product,
+                key=key,
+                defaults={"value": value, "sort_order": sort_order},
+            )
 
         if with_variants:
             for group_sort, (group_name, options) in enumerate(VARIANT_GROUP_TEMPLATE):
-                group = VariantGroup.objects.create(product=product, name=group_name, sort_order=group_sort)
+                group = VariantGroup.objects.create(
+                    product=product, name=group_name, sort_order=group_sort
+                )
                 for opt_sort, (label, delta, is_default) in enumerate(options):
                     VariantOption.objects.create(
-                        variant_group=group, label=label, price_delta=delta, is_default=is_default, sort_order=opt_sort
+                        variant_group=group,
+                        label=label,
+                        price_delta=delta,
+                        is_default=is_default,
+                        sort_order=opt_sort,
                     )
 
         if self.with_images:
             for i in range(2):
-                image_file = fetch_placeholder_image(f"{data['slug']}-{i}", width=1000, height=750)
+                image_file = fetch_placeholder_image(
+                    f"{data['slug']}-{i}", width=1000, height=750
+                )
                 if image_file:
-                    ProductImage.objects.create(product=product, image=image_file, alt_text=data["name"], sort_order=i)
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image_file,
+                        alt_text=data["name"],
+                        sort_order=i,
+                    )
 
         return product
 
     def seed_reviews(self, products):
-        authors = ["Lena Fischer", "Tom Bergmann", "Julia Novak", "Marcus Reid", "Ana Ferreira", "Chris Nolan", "Ines Duval", "Sam Okafor"]
-        motorcycle_titles = ["Exceeded expectations", "My daily rider", "Worth every dinar", "Great on the trail", "Solid first EV bike"]
-        accessory_titles = ["Does the job well", "Great fit and finish", "Would buy again", "Good value"]
+        authors = [
+            "Lena Fischer",
+            "Tom Bergmann",
+            "Julia Novak",
+            "Marcus Reid",
+            "Ana Ferreira",
+            "Chris Nolan",
+            "Ines Duval",
+            "Sam Okafor",
+        ]
+        motorcycle_titles = [
+            "Exceeded expectations",
+            "My daily rider",
+            "Worth every dinar",
+            "Great on the trail",
+            "Solid first EV bike",
+        ]
+        accessory_titles = [
+            "Does the job well",
+            "Great fit and finish",
+            "Would buy again",
+            "Good value",
+        ]
         bodies = [
             "Been using this for a few months now and it's held up better than I expected.",
             "Exactly as described. Delivery was quick and setup was painless.",
@@ -656,7 +1156,9 @@ class Command(BaseCommand):
                 )
                 created_count += 1
 
-        for product in accessories[::2]:  # every other accessory, to keep this proportionate
+        for product in accessories[
+            ::2
+        ]:  # every other accessory, to keep this proportionate
             if product.reviews.exists():
                 continue
             Review.objects.create(
@@ -669,7 +1171,11 @@ class Command(BaseCommand):
                 is_verified_purchase=self.rng.choice([True, False]),
             )
             created_count += 1
-        self.stdout.write(f"  reviews ({created_count} created)" if created_count else "  reviews already exist, skipped")
+        self.stdout.write(
+            f"  reviews ({created_count} created)"
+            if created_count
+            else "  reviews already exist, skipped"
+        )
 
     # -- dealers / content ---------------------------------------------
 
@@ -679,9 +1185,14 @@ class Command(BaseCommand):
             dealer, _ = Dealer.objects.get_or_create(
                 slug=data["slug"],
                 defaults={
-                    "name": data["name"], "city": data["city"], "wilaya": data["wilaya"],
-                    "address": data["address"], "phone": data["phone"], "email": f"{data['city'].lower()}@pihilics.dz",
-                    "latitude": Decimal(data["lat"]), "longitude": Decimal(data["lng"]),
+                    "name": data["name"],
+                    "city": data["city"],
+                    "wilaya": data["wilaya"],
+                    "address": data["address"],
+                    "phone": data["phone"],
+                    "email": f"{data['city'].lower()}@pihilics.dz",
+                    "latitude": Decimal(data["lat"]),
+                    "longitude": Decimal(data["lng"]),
                     "hours": "Mon-Fri 9:00-18:00, Sat 10:00-14:00",
                 },
             )
@@ -693,7 +1204,11 @@ class Command(BaseCommand):
         count = 0
         for category, entries in FAQS.items():
             for sort_order, (question, answer) in enumerate(entries):
-                FAQEntry.objects.get_or_create(category=category, question=question, defaults={"answer": answer, "sort_order": sort_order})
+                FAQEntry.objects.get_or_create(
+                    category=category,
+                    question=question,
+                    defaults={"answer": answer, "sort_order": sort_order},
+                )
                 count += 1
         self.stdout.write(f"  {count} FAQ entries")
 
@@ -703,8 +1218,11 @@ class Command(BaseCommand):
             Story.objects.get_or_create(
                 slug=data["slug"],
                 defaults={
-                    "title": data["title"], "excerpt": data["excerpt"], "body": data["body"],
-                    "is_published": True, "published_at": now - timedelta(days=(len(STORIES) - i) * 14),
+                    "title": data["title"],
+                    "excerpt": data["excerpt"],
+                    "body": data["body"],
+                    "is_published": True,
+                    "published_at": now - timedelta(days=(len(STORIES) - i) * 14),
                 },
             )
         self.stdout.write(f"  {len(STORIES)} journal stories")
@@ -713,11 +1231,21 @@ class Command(BaseCommand):
         now = timezone.now()
         PromoCode.objects.get_or_create(
             code="WELCOME10",
-            defaults={"discount_percent": Decimal("10.00"), "valid_from": now - timedelta(days=30), "valid_until": now + timedelta(days=335), "min_order_value": Decimal("0.00")},
+            defaults={
+                "discount_percent": Decimal("10.00"),
+                "valid_from": now - timedelta(days=30),
+                "valid_until": now + timedelta(days=335),
+                "min_order_value": Decimal("0.00"),
+            },
         )
         PromoCode.objects.get_or_create(
             code="SUMMER15",
-            defaults={"discount_percent": Decimal("15.00"), "valid_from": now - timedelta(days=10), "valid_until": now + timedelta(days=80), "min_order_value": Decimal("5000.00")},
+            defaults={
+                "discount_percent": Decimal("15.00"),
+                "valid_from": now - timedelta(days=10),
+                "valid_until": now + timedelta(days=80),
+                "min_order_value": Decimal("5000.00"),
+            },
         )
         self.stdout.write("  promo codes")
 
@@ -728,11 +1256,22 @@ class Command(BaseCommand):
         users = {}
 
         if not User.objects.filter(username="admin").exists():
-            User.objects.create_superuser(username="admin", email="admin@pihilics.dz", password="Pihilics#Admin2026")
-            self.stdout.write("  superuser  ->  username: admin  /  password: Pihilics#Admin2026")
+            User.objects.create_superuser(
+                username="admin",
+                email="admin@pihilics-product.com",
+                password="Pihilics#Admin2026",
+            )
+            self.stdout.write(
+                "  superuser  ->  username: admin  /  password: Pihilics#Admin2026"
+            )
 
         staff, created = User.objects.get_or_create(
-            username="staff.alger", defaults={"email": "staff.alger@pihilics.dz", "first_name": "Karim", "last_name": "Belkacem"}
+            username="staff.alger",
+            defaults={
+                "email": "staff.alger@pihilics.dz",
+                "first_name": "Karim",
+                "last_name": "Belkacem",
+            },
         )
         if created:
             staff.set_password("Pihilics#Staff2026")
@@ -745,7 +1284,12 @@ class Command(BaseCommand):
         users["staff"] = staff
 
         amina, created = User.objects.get_or_create(
-            username="amina.benali", defaults={"email": "amina.benali@example.dz", "first_name": "Amina", "last_name": "Benali"}
+            username="amina.benali",
+            defaults={
+                "email": "amina.benali@example.dz",
+                "first_name": "Amina",
+                "last_name": "Benali",
+            },
         )
         if created:
             amina.set_password("Pihilics#Demo2026")
@@ -757,13 +1301,22 @@ class Command(BaseCommand):
         profile.order_notifications_opt_in = True
         profile.save()
         Address.objects.get_or_create(
-            user=amina, street="12 Rue Didouche Mourad", city="Alger Centre", postal_code="16000", wilaya="16",
+            user=amina,
+            street="12 Rue Didouche Mourad",
+            city="Alger Centre",
+            postal_code="16000",
+            wilaya="16",
             defaults={"label": "Home", "is_default": True},
         )
         users["amina"] = amina
 
         yacine, created = User.objects.get_or_create(
-            username="yacine.haddad", defaults={"email": "yacine.haddad@example.dz", "first_name": "Yacine", "last_name": "Haddad"}
+            username="yacine.haddad",
+            defaults={
+                "email": "yacine.haddad@example.dz",
+                "first_name": "Yacine",
+                "last_name": "Haddad",
+            },
         )
         if created:
             yacine.set_password("Pihilics#Demo2026")
@@ -773,18 +1326,31 @@ class Command(BaseCommand):
         profile.preferred_language = "it"
         profile.save()
         Address.objects.get_or_create(
-            user=yacine, street="45 Boulevard de l'ALN", city="Oran", postal_code="31000", wilaya="31",
+            user=yacine,
+            street="45 Boulevard de l'ALN",
+            city="Oran",
+            postal_code="31000",
+            wilaya="31",
             defaults={"label": "Home", "is_default": True},
         )
         users["yacine"] = yacine
 
-        self.stdout.write("  demo users (staff.alger, amina.benali, yacine.haddad)  ->  password: Pihilics#Demo2026 / Pihilics#Staff2026")
+        self.stdout.write(
+            "  demo users (staff.alger, amina.benali, yacine.haddad)  ->  password: Pihilics#Demo2026 / Pihilics#Staff2026"
+        )
         return users
 
     # -- cart / orders / bookings ----------------------------------------
 
     @staticmethod
-    def _get_or_create_cart_item(cart, product, quantity, selected_color="", selected_size="", selected_upgrades=None):
+    def _get_or_create_cart_item(
+        cart,
+        product,
+        quantity,
+        selected_color="",
+        selected_size="",
+        selected_upgrades=None,
+    ):
         """
         CartItem's real identity is (cart, product, options_key), where
         options_key is a hash computed in CartItem.save() -- not something
@@ -793,20 +1359,37 @@ class Command(BaseCommand):
         existing line instead of colliding with its unique constraint.
         """
         selected_upgrades = selected_upgrades or []
-        probe = CartItem(selected_color=selected_color, selected_size=selected_size, selected_upgrades=selected_upgrades)
+        probe = CartItem(
+            selected_color=selected_color,
+            selected_size=selected_size,
+            selected_upgrades=selected_upgrades,
+        )
         options_key = probe.compute_options_key()
         item, _ = CartItem.objects.get_or_create(
-            cart=cart, product=product, options_key=options_key,
-            defaults={"quantity": quantity, "selected_color": selected_color, "selected_size": selected_size, "selected_upgrades": selected_upgrades},
+            cart=cart,
+            product=product,
+            options_key=options_key,
+            defaults={
+                "quantity": quantity,
+                "selected_color": selected_color,
+                "selected_size": selected_size,
+                "selected_upgrades": selected_upgrades,
+            },
         )
         return item
 
     def seed_carts(self, users, products):
         cart, _ = Cart.objects.get_or_create(user=users["amina"])
-        self._get_or_create_cart_item(cart, products["touring-gloves"], quantity=1, selected_size="M")
+        self._get_or_create_cart_item(
+            cart, products["touring-gloves"], quantity=1, selected_size="M"
+        )
 
-        guest_cart, _ = Cart.objects.get_or_create(session_key="demo-guest-session", user=None)
-        self._get_or_create_cart_item(guest_cart, products["carbon-helmet"], quantity=1, selected_size="L")
+        guest_cart, _ = Cart.objects.get_or_create(
+            session_key="demo-guest-session", user=None
+        )
+        self._get_or_create_cart_item(
+            guest_cart, products["carbon-helmet"], quantity=1, selected_size="L"
+        )
         self.stdout.write("  carts (1 account cart, 1 guest cart)")
 
     def seed_orders(self, users, products):
@@ -817,38 +1400,73 @@ class Command(BaseCommand):
         # Mirrors core.utils.get_vat_rate / get_shipping_cost rather than
         # re-deriving them: one national TVA rate, and a per-wilaya shipping
         # fee that falls back to the flat constant for an unpriced wilaya.
-        zone_fees = {z.wilaya: z.home_fee for z in ShippingZone.objects.filter(is_active=True)}
+        zone_fees = {
+            z.wilaya: z.home_fee for z in ShippingZone.objects.filter(is_active=True)
+        }
         checkout_settings = CheckoutSettings.get_solo()
 
-        def make_order(*, user, guest_email, guest_name, wilaya, city, street, postal_code,
-                        status, payment_method, lines, financing=None, insurance=None, days_ago=10):
+        def make_order(
+            *,
+            user,
+            guest_email,
+            guest_name,
+            wilaya,
+            city,
+            street,
+            postal_code,
+            status,
+            payment_method,
+            lines,
+            financing=None,
+            insurance=None,
+            days_ago=10,
+        ):
             subtotal = sum(products[slug].price * qty for slug, qty, _ in lines)
             vat_rate = STANDARD_TVA_RATE
-            vat_amount = (subtotal * vat_rate / Decimal("100")).quantize(Decimal("0.01"))
+            vat_amount = (subtotal * vat_rate / Decimal("100")).quantize(
+                Decimal("0.01")
+            )
             shipping_cost = (
-                Decimal("0.00") if subtotal >= checkout_settings.free_shipping_threshold
+                Decimal("0.00")
+                if subtotal >= checkout_settings.free_shipping_threshold
                 else zone_fees.get(wilaya, checkout_settings.standard_shipping_fee)
             )
 
             order = Order.objects.create(
-                user=user, guest_email=guest_email, guest_name=guest_name,
+                user=user,
+                guest_email=guest_email,
+                guest_name=guest_name,
                 status=status,
-                contact_first_name=(user.first_name if user else guest_name.split(" ")[0]),
-                contact_last_name=(user.last_name if user else guest_name.split(" ")[-1]),
+                contact_first_name=(
+                    user.first_name if user else guest_name.split(" ")[0]
+                ),
+                contact_last_name=(
+                    user.last_name if user else guest_name.split(" ")[-1]
+                ),
                 contact_email=(user.email if user else guest_email),
                 contact_phone="+213 21 55 09 11",
-                delivery_street=street, delivery_city=city, delivery_postal_code=postal_code, delivery_wilaya=wilaya,
+                delivery_street=street,
+                delivery_city=city,
+                delivery_postal_code=postal_code,
+                delivery_wilaya=wilaya,
                 delivery_method=DeliveryMethod.STANDARD,
                 payment_method=payment_method,
-                subtotal=subtotal, shipping_cost=shipping_cost, vat_amount=vat_amount, discount_amount=Decimal("0.00"),
+                subtotal=subtotal,
+                shipping_cost=shipping_cost,
+                vat_amount=vat_amount,
+                discount_amount=Decimal("0.00"),
                 total=Decimal("0.00"),
-                financing_plan=financing, insurance_tier=insurance,
+                financing_plan=financing,
+                insurance_tier=insurance,
             )
             for slug, qty, options in lines:
                 product = products[slug]
                 order.items.create(
-                    product=product, product_name_snapshot=product.name,
-                    unit_price_snapshot=product.price, quantity=qty, selected_options_snapshot=options,
+                    product=product,
+                    product_name_snapshot=product.name,
+                    unit_price_snapshot=product.price,
+                    quantity=qty,
+                    selected_options_snapshot=options,
                 )
             order.recompute_total(save=True)
             order.placed_at = timezone.now() - timedelta(days=days_ago)
@@ -856,15 +1474,28 @@ class Command(BaseCommand):
             return order
 
         financing_24 = FinancingPlan.objects.filter(term_months=24).first()
-        insurance_comprehensive = InsuranceTier.objects.filter(name=InsuranceTierName.COMPREHENSIVE).first()
+        insurance_comprehensive = InsuranceTier.objects.filter(
+            name=InsuranceTierName.COMPREHENSIVE
+        ).first()
 
         # Delivered order for Amina: a motorcycle + an accessory, financed, insured.
         order_a = make_order(
-            user=users["amina"], guest_email="", guest_name="",
-            wilaya="16", city="Alger Centre", street="12 Rue Didouche Mourad", postal_code="16000",
-            status=OrderStatus.DELIVERED, payment_method=PaymentMethod.CIB,
-            lines=[("pihilics-rvx", 1, {"color": "Graphite Black", "upgrades": []}), ("riding-jacket", 1, {"size": "M"})],
-            financing=financing_24, insurance=insurance_comprehensive, days_ago=45,
+            user=users["amina"],
+            guest_email="",
+            guest_name="",
+            wilaya="16",
+            city="Alger Centre",
+            street="12 Rue Didouche Mourad",
+            postal_code="16000",
+            status=OrderStatus.DELIVERED,
+            payment_method=PaymentMethod.CIB,
+            lines=[
+                ("pihilics-rvx", 1, {"color": "Graphite Black", "upgrades": []}),
+                ("riding-jacket", 1, {"size": "M"}),
+            ],
+            financing=financing_24,
+            insurance=insurance_comprehensive,
+            days_ago=45,
         )
         # orders.signals.seed_shipment_timeline already created one ShipmentEvent
         # row per ShipmentStage the moment order_a was saved above (Order Tracking,
@@ -874,16 +1505,25 @@ class Command(BaseCommand):
         # unique_stage_per_order constraint those signal-created rows already hold.
         for i, (stage_value, _label) in enumerate(ShipmentStage.choices):
             ShipmentEvent.objects.filter(order=order_a, stage=stage_value).update(
-                carrier="Yalidine Express", tracking_number="YAL-88451203",
-                occurred_at=order_a.placed_at + timedelta(days=i * 4), is_complete=True,
+                carrier="Yalidine Express",
+                tracking_number="YAL-88451203",
+                occurred_at=order_a.placed_at + timedelta(days=i * 4),
+                is_complete=True,
             )
 
         # Processing order for Amina: a battery pack, partially shipped.
         order_b = make_order(
-            user=users["amina"], guest_email="", guest_name="",
-            wilaya="16", city="Alger Centre", street="12 Rue Didouche Mourad", postal_code="16000",
-            status=OrderStatus.PROCESSING, payment_method=PaymentMethod.MANUAL,
-            lines=[("extended-battery", 1, {})], days_ago=2,
+            user=users["amina"],
+            guest_email="",
+            guest_name="",
+            wilaya="16",
+            city="Alger Centre",
+            street="12 Rue Didouche Mourad",
+            postal_code="16000",
+            status=OrderStatus.PROCESSING,
+            payment_method=PaymentMethod.MANUAL,
+            lines=[("extended-battery", 1, {})],
+            days_ago=2,
         )
         # Same reasoning as order_a above: update the signal-seeded rows for the
         # first two stages to "complete"; the remaining stages are left exactly
@@ -891,23 +1531,38 @@ class Command(BaseCommand):
         # needed there, since that's already the default state.
         for i, (stage_value, _label) in enumerate(list(ShipmentStage.choices)[:2]):
             ShipmentEvent.objects.filter(order=order_b, stage=stage_value).update(
-                occurred_at=order_b.placed_at + timedelta(days=i), is_complete=True,
+                occurred_at=order_b.placed_at + timedelta(days=i),
+                is_complete=True,
             )
 
         # Shipped order for Yacine: a motorcycle, delivered to Oran.
         make_order(
-            user=users["yacine"], guest_email="", guest_name="",
-            wilaya="31", city="Oran", street="45 Boulevard de l'ALN", postal_code="31000",
-            status=OrderStatus.SHIPPED, payment_method=PaymentMethod.MANUAL,
-            lines=[("trail-s", 1, {"color": "Forest Green", "upgrades": []})], days_ago=6,
+            user=users["yacine"],
+            guest_email="",
+            guest_name="",
+            wilaya="31",
+            city="Oran",
+            street="45 Boulevard de l'ALN",
+            postal_code="31000",
+            status=OrderStatus.SHIPPED,
+            payment_method=PaymentMethod.MANUAL,
+            lines=[("trail-s", 1, {"color": "Forest Green", "upgrades": []})],
+            days_ago=6,
         )
 
         # Guest checkout order: no account, just an accessory.
         make_order(
-            user=None, guest_email="guest.rider@example.com", guest_name="Guest Rider",
-            wilaya="25", city="Constantine", street="8 Rue Larbi Ben M'hidi", postal_code="25000",
-            status=OrderStatus.PROCESSING, payment_method=PaymentMethod.CIB,
-            lines=[("touring-gloves", 1, {"size": "L"})], days_ago=1,
+            user=None,
+            guest_email="guest.rider@example.com",
+            guest_name="Guest Rider",
+            wilaya="25",
+            city="Constantine",
+            street="8 Rue Larbi Ben M'hidi",
+            postal_code="25000",
+            status=OrderStatus.PROCESSING,
+            payment_method=PaymentMethod.CIB,
+            lines=[("touring-gloves", 1, {"size": "L"})],
+            days_ago=1,
         )
 
         # BaridiMob order for Yacine, transfer proof already uploaded and
@@ -916,10 +1571,17 @@ class Command(BaseCommand):
         # something real to render without anyone having to walk through
         # checkout by hand first.
         order_d = make_order(
-            user=users["yacine"], guest_email="", guest_name="",
-            wilaya="31", city="Oran", street="45 Boulevard de l'ALN", postal_code="31000",
-            status=OrderStatus.PROCESSING, payment_method=PaymentMethod.BARIDIMOB,
-            lines=[("touring-gloves", 1, {"size": "L"})], days_ago=1,
+            user=users["yacine"],
+            guest_email="",
+            guest_name="",
+            wilaya="31",
+            city="Oran",
+            street="45 Boulevard de l'ALN",
+            postal_code="31000",
+            status=OrderStatus.PROCESSING,
+            payment_method=PaymentMethod.BARIDIMOB,
+            lines=[("touring-gloves", 1, {"size": "L"})],
+            days_ago=1,
         )
         # orders.signals.initialise_payment_state already set order_d to
         # AWAITING_PROOF on creation; uploading the demo proof below drives
@@ -932,7 +1594,9 @@ class Command(BaseCommand):
             sender_note="Sent via BaridiMob this morning, let me know if anything else is needed.",
         )
 
-        self.stdout.write("  orders (5, including shipment timelines + one BaridiMob proof)")
+        self.stdout.write(
+            "  orders (5, including shipment timelines + one BaridiMob proof)"
+        )
 
     def seed_bookings(self, users, products, dealers, service_tiers):
         # Looked up by who/what rather than by date: date/time_slot are
@@ -947,33 +1611,60 @@ class Command(BaseCommand):
         morning_slot, afternoon_slot = slots[0], slots[1 if len(slots) > 1 else 0]
 
         TestRideBooking.objects.get_or_create(
-            product=products["pihilics-rvx"], dealer=dealers["pihilics-alger"], first_name="Nadia", last_name="Cherif",
+            product=products["pihilics-rvx"],
+            dealer=dealers["pihilics-alger"],
+            first_name="Nadia",
+            last_name="Cherif",
             defaults={
-                "date": tomorrow_plus(7), "time_slot": morning_slot,
-                "email": "nadia.cherif@example.dz", "phone": "+213 21 55 12 34", "license_number": "DZ-LIC-88213",
-                "waiver_acknowledged": True, "status": BookingStatus.REQUESTED,
+                "date": tomorrow_plus(7),
+                "time_slot": morning_slot,
+                "email": "nadia.cherif@example.dz",
+                "phone": "+213 21 55 12 34",
+                "license_number": "DZ-LIC-88213",
+                "waiver_acknowledged": True,
+                "status": BookingStatus.REQUESTED,
             },
         )
 
-        garage_entry = users["amina"].garage_entries.filter(product__slug="pihilics-rvx").first()
+        garage_entry = (
+            users["amina"].garage_entries.filter(product__slug="pihilics-rvx").first()
+        )
         ServiceBooking.objects.get_or_create(
-            product=products["pihilics-rvx"], dealer=dealers["pihilics-alger"], contact_email=users["amina"].email,
+            product=products["pihilics-rvx"],
+            dealer=dealers["pihilics-alger"],
+            contact_email=users["amina"].email,
             defaults={
-                "date": tomorrow_plus(14), "time_slot": afternoon_slot,
-                "garage_entry": garage_entry, "service_tier": service_tiers[ServiceTierName.ROUTINE_CHECK],
-                "user": users["amina"], "contact_first_name": "Amina", "contact_last_name": "Benali",
-                "contact_phone": "+213 21 55 09 11", "status": BookingStatus.CONFIRMED,
+                "date": tomorrow_plus(14),
+                "time_slot": afternoon_slot,
+                "garage_entry": garage_entry,
+                "service_tier": service_tiers[ServiceTierName.ROUTINE_CHECK],
+                "user": users["amina"],
+                "contact_first_name": "Amina",
+                "contact_last_name": "Benali",
+                "contact_phone": "+213 21 55 09 11",
+                "status": BookingStatus.CONFIRMED,
             },
         )
         self.stdout.write("  bookings (1 test ride, 1 service)")
 
     def seed_contact_messages(self, users):
         ContactMessage.objects.get_or_create(
-            email="prospect@example.com", subject="Fleet pricing for 5 units",
-            defaults={"department": ContactDepartment.SALES, "name": "Priya Shah", "message": "Interested in a small fleet purchase for a rental business -- is bulk pricing available?"},
+            email="prospect@example.com",
+            subject="Fleet pricing for 5 units",
+            defaults={
+                "department": ContactDepartment.SALES,
+                "name": "Priya Shah",
+                "message": "Interested in a small fleet purchase for a rental business -- is bulk pricing available?",
+            },
         )
         ContactMessage.objects.get_or_create(
-            email=users["amina"].email, subject="Question about my Battery Service booking",
-            defaults={"department": ContactDepartment.SUPPORT, "name": "Amina Martin", "user": users["amina"], "message": "Can I move my upcoming service appointment to the following week instead?"},
+            email=users["amina"].email,
+            subject="Question about my Battery Service booking",
+            defaults={
+                "department": ContactDepartment.SUPPORT,
+                "name": "Amina Martin",
+                "user": users["amina"],
+                "message": "Can I move my upcoming service appointment to the following week instead?",
+            },
         )
         self.stdout.write("  contact messages")
