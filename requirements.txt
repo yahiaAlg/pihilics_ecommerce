@@ -20,3 +20,5 @@ chargily-pay
 whitenoise
 
 python-dotenv
+
+PyMySQL
