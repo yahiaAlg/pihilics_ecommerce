@@ -47,10 +47,10 @@
               <div class="form-group">
                 <label class="form-label">Wilaya</label>
                 {# The static mockup hardcoded a handful of European countries. #}
-                {# Rendered from the real form field instead: core.constants #}
-                {# WILAYA_CHOICES, the 58 wilayas Address/Order/ShippingZone all #}
-                {# key off, so adding or suspending a delivery zone never means #}
-                {# editing this <select>. #}
+                {# Rendered from the real form field instead, which reads the #}
+                {# core.Wilaya table that Address/Order/ShippingZone all key off #}
+                {# -- so adding a wilaya, renaming one, or suspending delivery to #}
+                {# one is an admin edit and never means touching this <select>. #}
                 <select name="wilaya" class="form-select" required>
                   {% for value, label in form.fields.wilaya.choices %}
                   <option value="{{ value }}"{% if form.wilaya.value == value %} selected{% endif %}>{{ label }}</option>

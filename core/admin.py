@@ -11,7 +11,7 @@ page, rather than letting a second row be created.
 from django.contrib import admin
 from django.shortcuts import redirect
 
-from .models import CompanyInfo, ShippingZone, VATRate
+from .models import CheckoutSettings, CompanyInfo, Language, ShippingZone, VATRate, Wilaya
 
 
 @admin.register(CompanyInfo)
@@ -70,3 +70,78 @@ class ShippingZoneAdmin(admin.ModelAdmin):
     list_editable = ("home_fee", "desk_fee", "delivery_days_min", "delivery_days_max", "is_active")
     search_fields = ("wilaya",)
     ordering = ("wilaya",)
+
+
+@admin.register(CheckoutSettings)
+class CheckoutSettingsAdmin(admin.ModelAdmin):
+    """
+    Singleton, same treatment as CompanyInfo: no changelist, no second row,
+    no delete — just the one form.
+
+    This is where the numbers that used to be Python constants live. The
+    free-shipping threshold is the one worth re-reading after any price
+    change to the catalogue: set below what a typical order costs, it
+    silently makes every paid delivery tier unreachable.
+    """
+
+    fieldsets = (
+        ("Shipping Pricing", {
+            "fields": (
+                "free_shipping_threshold",
+                "standard_shipping_fee",
+                "express_shipping_surcharge",
+            ),
+            "description": "Applies to wilayas with no Shipping Zone row of their own; a zone's "
+                           "own fee always wins over the flat fee below it. The free-shipping "
+                           "threshold applies to every order regardless of zone or method.",
+        }),
+        ("Online Payment Availability", {
+            "fields": ("card_payments_enabled", "card_payments_unavailable_note"),
+            "description": "The CIB/Edahabia integration (Chargily) is fully built and stays "
+                           "wired up while this is off — the option is simply shown as "
+                           "'coming soon' and refused server-side. Turn it on once Chargily "
+                           "has verified both your account and your application, and the real "
+                           "CHARGILY_KEY / CHARGILY_SECRET are in the environment.",
+        }),
+    )
+    readonly_fields = ("updated_at",)
+
+    def has_add_permission(self, request):
+        return not CheckoutSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        obj = CheckoutSettings.get_solo()
+        return redirect("admin:core_checkoutsettings_change", obj.pk)
+
+
+@admin.register(Wilaya)
+class WilayaAdmin(admin.ModelAdmin):
+    """
+    The 58 wilayas that back every wilaya dropdown on the site.
+
+    `list_editable` on name/is_active makes the two realistic jobs — fixing
+    a spelling and suspending delivery to a province — single changelist
+    edits. Deletion is left available but is the wrong tool: unchecking
+    `is_active` withdraws a wilaya from the dropdowns while leaving orders
+    that already reference it able to display its name.
+    """
+
+    list_display = ("code", "name", "is_active")
+    list_editable = ("name", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("code", "name")
+    ordering = ("code",)
+
+
+@admin.register(Language)
+class LanguageAdmin(admin.ModelAdmin):
+    """Interface languages offered on Account > Preferences."""
+
+    list_display = ("code", "name", "sort_order", "is_active")
+    list_editable = ("name", "sort_order", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("code", "name")
+    ordering = ("sort_order", "code")

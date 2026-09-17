@@ -34,7 +34,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from cart.utils import add_item_to_cart, get_cart
-from core.constants import FREE_SHIPPING_THRESHOLD
+from core.models import CheckoutSettings
 
 from .forms import AccessoryFilterForm, MotorcycleFilterForm, ReviewForm, SearchForm
 from .models import Category, Product, ProductType, VariantOption
@@ -175,7 +175,7 @@ def product_detail_view(request, slug):
         # still holds nationwide: free above this subtotal. Passed through
         # rather than written into the template so the copy can't drift from
         # what checkout actually charges.
-        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "free_shipping_threshold": CheckoutSettings.get_safe().free_shipping_threshold,
     })
 
 

@@ -39,7 +39,19 @@ from django.test import Client
 
 import orders.chargily as chargily
 from catalog.models import Product
+from core.models import CheckoutSettings
 from orders.models import Order, PaymentMethod, PaymentState
+
+# CIB/Edahabia ships switched OFF (CheckoutSettings.card_payments_enabled),
+# so checkout refuses the method and this whole file would test nothing.
+# The integration itself is untouched by that switch -- it is exactly the
+# state the site will be in once Chargily has verified the account -- so
+# turn it on for the duration of the run and put it back at the end. The
+# "while it's off" behaviour is asserted in verify_orders.py instead.
+_checkout_settings = CheckoutSettings.get_solo()
+_cards_were_enabled = _checkout_settings.card_payments_enabled
+_checkout_settings.card_payments_enabled = True
+_checkout_settings.save()
 
 
 def ok(label, cond, extra=""):
@@ -279,3 +291,9 @@ order3.refresh_from_db()
 ok("order3 now has a live checkout", bool(order3.chargily_checkout_url))
 
 print("\nALL CHARGILY CHECKS PASSED")
+
+# Restore the shipped default, so running this script doesn't quietly leave
+# card payments switched on in the database it was run against.
+_checkout_settings.card_payments_enabled = _cards_were_enabled
+_checkout_settings.save()
+print("  (card payments switched back to:", _cards_were_enabled, ")")

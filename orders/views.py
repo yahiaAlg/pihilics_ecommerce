@@ -20,13 +20,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from cart.utils import clear_promo_from_session, get_applied_promo_code, get_cart
-from core.constants import (
-    EXPRESS_SHIPPING_SURCHARGE,
-    STANDARD_SHIPPING_FEE,
-    WILAYA_CHOICES,
-)
+from core.constants import get_wilaya_name
 from core.utils import get_shipping_zone
-from core.models import CompanyInfo
+from core.models import CheckoutSettings, CompanyInfo
 from programs.models import FinancingPlan, InsuranceTier
 
 from .chargily import ChargilyError, WEBHOOK_EVENT_STATES, create_checkout_for_order, verify_webhook_signature
@@ -124,11 +120,15 @@ def checkout_delivery_view(request):
     selected_wilaya = (
         form.data.get("wilaya") if request.method == "POST" else initial.get("wilaya")
     )
+    # Flat fallback fees, for the wilayas with no ShippingZone row of their
+    # own -- read from the CheckoutSettings singleton so the quoted price
+    # and what get_shipping_cost actually charges can't drift apart.
+    checkout_settings = CheckoutSettings.get_safe()
     return render(request, "orders/checkout_delivery.html", {
         "form": form, "cart": cart, "step": 2, "pricing": _current_pricing_preview(request, cart),
         "delivery_zone": get_shipping_zone(selected_wilaya) if selected_wilaya else None,
-        "standard_fee": STANDARD_SHIPPING_FEE,
-        "express_fee": STANDARD_SHIPPING_FEE + EXPRESS_SHIPPING_SURCHARGE,
+        "standard_fee": checkout_settings.standard_shipping_fee,
+        "express_fee": checkout_settings.standard_shipping_fee + checkout_settings.express_shipping_surcharge,
     })
 
 
@@ -161,6 +161,10 @@ def checkout_payment_view(request):
 
     return render(request, "orders/checkout_payment.html", {
         "form": form, "cart": cart, "step": 3, "pricing": _current_pricing_preview(request, cart),
+        # Drives the greyed-out "coming soon" state of the CIB/Edahabia
+        # option. The form has already removed it from the accepted choices
+        # when this is False -- the template only decides how to *say* so.
+        "checkout_settings": CheckoutSettings.get_safe(),
     })
 
 
@@ -253,9 +257,7 @@ def checkout_review_view(request):
     return render(request, "orders/checkout_review.html", {
         "cart": cart, "checkout": checkout, "pricing": pricing, "step": 4,
         "financing_plan": financing_plan, "insurance_tier": insurance_tier,
-        "delivery_wilaya_display": dict(WILAYA_CHOICES).get(
-            checkout["delivery"]["wilaya"], checkout["delivery"]["wilaya"]
-        ),
+        "delivery_wilaya_display": get_wilaya_name(checkout["delivery"]["wilaya"]),
         # Rendered from the real DeliveryMethod/PaymentMethod choices rather
         # than a hardcoded if/elif chain -- the old two-way delivery check
         # silently had no case for "desk" (stopdesk), and the old payment

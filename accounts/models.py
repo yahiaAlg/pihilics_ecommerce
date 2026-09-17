@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.constants import LANGUAGE_CHOICES, WILAYA_CHOICES
+from core.constants import language_choices, wilaya_choices
 
 
 class UserRole(models.TextChoices):
@@ -27,7 +27,7 @@ class UserProfile(models.Model):
     )
     phone = models.CharField(max_length=30, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    preferred_language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default="fr")
+    preferred_language = models.CharField(max_length=5, choices=language_choices, default="fr")
 
     # Preferences tab (spec 6.17.5): three notification toggles.
     marketing_opt_in = models.BooleanField(default=True, help_text="Product updates / news — on by default.")
@@ -56,7 +56,7 @@ class Address(models.Model):
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=100, help_text="Commune / city.")
     postal_code = models.CharField(max_length=20)
-    wilaya = models.CharField(max_length=2, choices=WILAYA_CHOICES)
+    wilaya = models.CharField(max_length=2, choices=wilaya_choices)
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

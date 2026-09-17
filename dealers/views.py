@@ -20,7 +20,7 @@ from urllib.parse import quote
 from django.db.models import Q
 from django.shortcuts import render
 
-from core.constants import WILAYA_CHOICES
+from core.constants import wilaya_choices
 
 from .forms import DealerSearchForm
 from .models import Dealer
@@ -49,7 +49,7 @@ def dealer_list_view(request):
         # wilaya name too, since that's what a visitor actually types
         # ("Setif"), and against the code itself, since Algerians routinely
         # refer to a wilaya by its number ("19").
-        matching_codes = [code for code, label in WILAYA_CHOICES if q.lower() in label.lower()]
+        matching_codes = [code for code, label in wilaya_choices() if q.lower() in label.lower()]
         if q.strip().isdigit():
             matching_codes.append(q.strip().zfill(2))
         dealers = dealers.filter(Q(name__icontains=q) | Q(city__icontains=q) | Q(wilaya__in=matching_codes))

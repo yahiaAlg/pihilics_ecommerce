@@ -18,7 +18,7 @@ import re
 
 from django import forms
 
-from core.constants import WILAYA_CHOICES
+from core.constants import wilaya_choices
 from programs.models import FinancingPlan, InsuranceTier
 
 from .models import (
@@ -53,7 +53,7 @@ class CheckoutDeliveryForm(forms.Form):
     street = forms.CharField(max_length=255)
     city = forms.CharField(max_length=100, label="Commune / City")
     postal_code = forms.CharField(max_length=20)
-    wilaya = forms.ChoiceField(choices=WILAYA_CHOICES)
+    wilaya = forms.ChoiceField(choices=wilaya_choices)
     delivery_method = forms.ChoiceField(
         choices=DeliveryMethod.choices, widget=forms.RadioSelect, initial=DeliveryMethod.STANDARD
     )
@@ -102,18 +102,44 @@ class CheckoutPaymentForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        from core.models import CheckoutSettings, CompanyInfo
+
+        unavailable = []
+
         # BaridiMob asks the customer to transfer money to a specific
         # account. Until someone has entered that account in the admin
         # there is nowhere for the money to go, so the option is withdrawn
         # rather than offered and then dead-ended -- and withdrawing it
         # here, not just in the template, means a hand-crafted POST can't
         # select it either.
-        from core.models import CompanyInfo
-
         if not CompanyInfo.get_solo().has_sales_account:
+            unavailable.append(PaymentMethod.BARIDIMOB)
+
+        # CIB/Edahabia is built end to end (orders/chargily.py and the
+        # webhook that settles it are untouched) but stays switched off
+        # until Chargily has verified the account and real keys are in the
+        # environment. The template greys the option out; this is the half
+        # that matters, since a greyed-out <input> is a suggestion and a
+        # missing choice is a rule. Exposed as `card_payments_enabled` so
+        # the template can explain *why* the option is dark rather than
+        # silently dropping it.
+        self.card_payments_enabled = CheckoutSettings.get_safe().card_payments_enabled
+        if not self.card_payments_enabled:
+            unavailable.append(PaymentMethod.CIB)
+
+        if unavailable:
             self.fields["payment_method"].choices = [
-                choice for choice in PaymentMethod.choices if choice[0] != PaymentMethod.BARIDIMOB
+                choice for choice in PaymentMethod.choices if choice[0] not in unavailable
             ]
+
+        # Financing requires a card (edge case 15.1, enforced in clean()
+        # below), so with cards off there is no payment method a plan could
+        # ever be attached to. Emptying the queryset rather than leaving a
+        # populated <select> that can only ever produce a validation error:
+        # an offer you cannot accept is worse than one that isn't shown.
+        if not self.card_payments_enabled:
+            self.fields["financing_plan"].queryset = FinancingPlan.objects.none()
+            self.fields["financing_plan"].disabled = True
 
     def clean(self):
         cleaned_data = super().clean()
@@ -125,6 +151,23 @@ class CheckoutPaymentForm(forms.Form):
         if cleaned_data.get("financing_plan") and payment_method != PaymentMethod.CIB:
             self.add_error(
                 "financing_plan", "A financing plan requires a CIB / Edahabia card as the payment method."
+            )
+
+        # The withdrawn choice above is what actually refuses a card
+        # payment, and it refuses it before this method runs -- which
+        # leaves the customer with "Select a valid choice. cib is not one
+        # of the available choices", a message that reads like a bug
+        # rather than an answer. A stale tab left open when cards were
+        # switched off mid-session is the realistic way to land here, so
+        # the raw submitted value is inspected (cleaned_data has nothing
+        # by this point) and the generic error is swapped for the reason.
+        raw_method = (self.data.get("payment_method") or "").strip()
+        if raw_method == PaymentMethod.CIB and not self.card_payments_enabled:
+            self.errors.pop("payment_method", None)
+            self.add_error(
+                "payment_method",
+                "Card payments (CIB / Edahabia) aren't available yet. "
+                "Please choose another payment method.",
             )
 
         return cleaned_data

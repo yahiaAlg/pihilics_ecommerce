@@ -3,7 +3,43 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-from core.constants import TIME_SLOT_CHOICES
+from core.constants import time_slot_choices
+
+
+class TimeSlot(models.Model):
+    """
+    A bookable half-day slot offered by the Test Ride and Service forms
+    (spec 6.12/6.13), and the source of the `time_slot` choices on both
+    booking models via core.constants.time_slot_choices.
+
+    Was a two-entry hardcoded list. It is a table because opening hours
+    are an operations decision, not a code one: adding an evening slot,
+    shifting the afternoon window by an hour, or suspending mornings for
+    a season are all things the shop should be able to do from the admin.
+
+    `is_active` withdraws a slot from the booking forms while leaving
+    every booking already made against it able to display its own label.
+    """
+
+    code = models.SlugField(
+        max_length=20, unique=True,
+        help_text='Stored on bookings, e.g. "morning". Changing it orphans existing bookings — add a new slot instead.',
+    )
+    label = models.CharField(
+        max_length=100, help_text='What the customer sees, e.g. "Morning (9:00 - 13:00)".'
+    )
+    is_active = models.BooleanField(
+        default=True, help_text="Uncheck to stop offering this slot without deleting it."
+    )
+    sort_order = models.PositiveSmallIntegerField(
+        default=0, help_text="Lower numbers appear first on the booking forms."
+    )
+
+    class Meta:
+        ordering = ["sort_order", "code"]
+
+    def __str__(self):
+        return self.label
 
 
 class BookingStatus(models.TextChoices):
@@ -48,7 +84,7 @@ class TestRideBooking(models.Model):
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="test_ride_bookings")
     dealer = models.ForeignKey("dealers.Dealer", on_delete=models.PROTECT, related_name="test_ride_bookings")
     date = models.DateField()
-    time_slot = models.CharField(max_length=20, choices=TIME_SLOT_CHOICES)
+    time_slot = models.CharField(max_length=20, choices=time_slot_choices)
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -97,7 +133,7 @@ class ServiceBooking(models.Model):
     dealer = models.ForeignKey("dealers.Dealer", on_delete=models.PROTECT, related_name="service_bookings")
     service_tier = models.ForeignKey(ServiceTier, on_delete=models.PROTECT, related_name="bookings")
     date = models.DateField()
-    time_slot = models.CharField(max_length=20, choices=TIME_SLOT_CHOICES)
+    time_slot = models.CharField(max_length=20, choices=time_slot_choices)
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_bookings"

@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.constants import WILAYA_CHOICES
+from core.constants import wilaya_choices
 
 # Payment-proof uploads are the one place on this site where an anonymous
 # visitor can put a file on our disk, so the accepted set is deliberately
@@ -148,7 +148,7 @@ class Order(models.Model):
     delivery_street = models.CharField(max_length=255)
     delivery_city = models.CharField(max_length=100)
     delivery_postal_code = models.CharField(max_length=20)
-    delivery_wilaya = models.CharField(max_length=2, choices=WILAYA_CHOICES)
+    delivery_wilaya = models.CharField(max_length=2, choices=wilaya_choices)
     delivery_method = models.CharField(
         max_length=20, choices=DeliveryMethod.choices, default=DeliveryMethod.STANDARD
     )

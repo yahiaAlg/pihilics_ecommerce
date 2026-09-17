@@ -52,7 +52,17 @@ ok("shipping figure rendered in DZD", "DA" in html)
 ok("financing selector present (BR-CHK-08)", 'name="financing_plan"' in html)
 ok("insurance selector present (BR-CHK-08)", 'name="insurance_tier"' in html)
 
+# CIB/Edahabia is switched off by default (CheckoutSettings.card_payments_enabled),
+# so this walkthrough uses the Manual Order route. The card option's own
+# "coming soon" behaviour is asserted in the dedicated section further down,
+# and the full Chargily flow (with the switch on) lives in verify_chargily.py.
+ok("card option shown as coming soon, not as a choice", "Coming Soon" in html)
+ok("no selectable cib radio while cards are off", 'value="cib"' not in html)
+
 r = c.post("/checkout/payment/", {"payment_method": "cib"})
+ok("a hand-crafted cib POST is refused server-side", r.status_code == 200, r.status_code)
+
+r = c.post("/checkout/payment/", {"payment_method": "manual"})
 ok("step 3 POST redirects to review", r.status_code == 302 and r["Location"].endswith("/checkout/review/"), r.get("Location"))
 
 r = c.get("/checkout/review/")
@@ -60,7 +70,7 @@ html = r.content.decode()
 ok("step 4 renders", r.status_code == 200)
 ok("review shows real wilaya name not code", "Setif" in html or "Sétif" in html)
 ok("review shows delivery method label", "Express" in html)
-ok("review shows payment method label", "CIB" in html or "Edahabia" in html)
+ok("review shows payment method label", "Manual Order" in html)
 
 r = c.post("/checkout/review/", {})
 ok("place order redirects (PRG)", r.status_code == 302, r.get("Location"))

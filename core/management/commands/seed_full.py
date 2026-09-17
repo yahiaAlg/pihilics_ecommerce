@@ -60,8 +60,8 @@ from catalog.models import (
     VariantOption,
 )
 from content.models import FAQCategory, FAQEntry, Story
-from core.constants import FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE, TIME_SLOT_CHOICES
-from core.models import CompanyInfo, ShippingZone
+from core.constants import time_slot_choices
+from core.models import CheckoutSettings, CompanyInfo, ShippingZone
 from dealers.models import Dealer
 from orders.models import (
     DeliveryMethod,
@@ -818,6 +818,7 @@ class Command(BaseCommand):
         # re-deriving them: one national TVA rate, and a per-wilaya shipping
         # fee that falls back to the flat constant for an unpriced wilaya.
         zone_fees = {z.wilaya: z.home_fee for z in ShippingZone.objects.filter(is_active=True)}
+        checkout_settings = CheckoutSettings.get_solo()
 
         def make_order(*, user, guest_email, guest_name, wilaya, city, street, postal_code,
                         status, payment_method, lines, financing=None, insurance=None, days_ago=10):
@@ -825,8 +826,8 @@ class Command(BaseCommand):
             vat_rate = STANDARD_TVA_RATE
             vat_amount = (subtotal * vat_rate / Decimal("100")).quantize(Decimal("0.01"))
             shipping_cost = (
-                Decimal("0.00") if subtotal >= FREE_SHIPPING_THRESHOLD
-                else zone_fees.get(wilaya, STANDARD_SHIPPING_FEE)
+                Decimal("0.00") if subtotal >= checkout_settings.free_shipping_threshold
+                else zone_fees.get(wilaya, checkout_settings.standard_shipping_fee)
             )
 
             order = Order.objects.create(
@@ -940,10 +941,15 @@ class Command(BaseCommand):
         # command is re-run on a different day.
         tomorrow_plus = lambda days: timezone.localdate() + timedelta(days=days)
 
+        # Slots come from the bookings.TimeSlot table now, not a constant,
+        # so take the first two active ones rather than assuming any code.
+        slots = [code for code, _label in time_slot_choices()]
+        morning_slot, afternoon_slot = slots[0], slots[1 if len(slots) > 1 else 0]
+
         TestRideBooking.objects.get_or_create(
             product=products["pihilics-rvx"], dealer=dealers["pihilics-alger"], first_name="Nadia", last_name="Cherif",
             defaults={
-                "date": tomorrow_plus(7), "time_slot": TIME_SLOT_CHOICES[0][0],
+                "date": tomorrow_plus(7), "time_slot": morning_slot,
                 "email": "nadia.cherif@example.dz", "phone": "+213 21 55 12 34", "license_number": "DZ-LIC-88213",
                 "waiver_acknowledged": True, "status": BookingStatus.REQUESTED,
             },
@@ -953,7 +959,7 @@ class Command(BaseCommand):
         ServiceBooking.objects.get_or_create(
             product=products["pihilics-rvx"], dealer=dealers["pihilics-alger"], contact_email=users["amina"].email,
             defaults={
-                "date": tomorrow_plus(14), "time_slot": TIME_SLOT_CHOICES[1][0],
+                "date": tomorrow_plus(14), "time_slot": afternoon_slot,
                 "garage_entry": garage_entry, "service_tier": service_tiers[ServiceTierName.ROUTINE_CHECK],
                 "user": users["amina"], "contact_first_name": "Amina", "contact_last_name": "Benali",
                 "contact_phone": "+213 21 55 09 11", "status": BookingStatus.CONFIRMED,

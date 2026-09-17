@@ -188,7 +188,8 @@ LOGOUT_REDIRECT_URL = "content:home"
 # ---------------------------------------------------------------------------
 # Internationalization
 # ---------------------------------------------------------------------------
-# Note: UserProfile.preferred_language (core.constants.LANGUAGE_CHOICES) is
+# Note: UserProfile.preferred_language (choices from the core.Language
+# table, via core.constants.language_choices) is
 # an Account > Preferences field describing what language the storefront
 # should render in for that visitor -- a template/i18n concern for a later
 # phase, distinct from this server-side default.

@@ -18,7 +18,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from bookings.models import ServiceTier, ServiceTierName
+from bookings.models import ServiceTier, ServiceTierName, TimeSlot
 from catalog.models import (
     Category,
     Product,
@@ -30,7 +30,13 @@ from catalog.models import (
     VariantGroup,
     VariantOption,
 )
-from core.models import CompanyInfo, ShippingZone
+from core.constants import (
+    FALLBACK_LANGUAGES,
+    FALLBACK_TIME_SLOTS,
+    FALLBACK_WILAYAS,
+    clear_choice_cache,
+)
+from core.models import CheckoutSettings, CompanyInfo, Language, ShippingZone, Wilaya
 from dealers.models import Dealer
 from programs.models import FinancingPlan, InsuranceTier, InsuranceTierName
 
@@ -70,6 +76,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.with_images = not options["no_images"]
         with transaction.atomic():
+            self.seed_reference_data()
             self.seed_company_and_vat()
             categories = self.seed_categories()
             self.seed_products(categories)
@@ -84,6 +91,44 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Minimal seed data created."))
 
     # -- steps -----------------------------------------------------------
+
+    def seed_reference_data(self):
+        """
+        Wilayas, languages, booking slots and the CheckoutSettings
+        singleton -- the tables that replaced the hardcoded lists in
+        core/constants.py.
+
+        The core.0007 / bookings.0003 data migrations already seed these on
+        a fresh install, so on a normal database this step is a no-op.
+        It exists for the same reason ensure_legal_documents does: a
+        database that has drifted (rows deleted while experimenting, a
+        migration faked) should be repairable by re-running the seed rather
+        than by hand-crafting SQL. Existing rows are left alone apart from
+        their display name, so re-seeding can't undo an operator's
+        is_active decisions.
+        """
+        for code, name in FALLBACK_WILAYAS:
+            Wilaya.objects.update_or_create(code=code, defaults={"name": name})
+
+        for index, (code, name) in enumerate(FALLBACK_LANGUAGES):
+            Language.objects.update_or_create(
+                code=code, defaults={"name": name, "sort_order": index}
+            )
+
+        for index, (code, label) in enumerate(FALLBACK_TIME_SLOTS):
+            TimeSlot.objects.update_or_create(
+                code=code, defaults={"label": label, "sort_order": index}
+            )
+
+        # Creates the row with its field defaults if missing; never
+        # overwrites figures someone has already tuned in the admin.
+        CheckoutSettings.get_solo()
+
+        # These lists are cached per process (core.constants), and this
+        # command may be called in-process by a test or another command.
+        clear_choice_cache()
+
+        self.stdout.write("  reference data: wilayas, languages, booking slots, checkout settings")
 
     def seed_company_and_vat(self):
         company = CompanyInfo.get_solo()

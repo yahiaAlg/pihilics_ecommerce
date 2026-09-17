@@ -14,7 +14,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-from core.constants import LANGUAGE_CHOICES, WILAYA_CHOICES
+from core.constants import language_choices, wilaya_choices
 
 from .models import Address, UserProfile
 from .utils import validate_password_strength
@@ -183,7 +183,7 @@ class ProfileForm(forms.ModelForm):
 class PreferencesForm(forms.ModelForm):
     """Spec 6.17.5: three notification toggles plus the interface-language selector."""
 
-    preferred_language = forms.ChoiceField(choices=LANGUAGE_CHOICES)
+    preferred_language = forms.ChoiceField(choices=language_choices)
 
     class Meta:
         model = UserProfile
@@ -209,7 +209,7 @@ class AddressForm(forms.ModelForm):
     full address-validation service (out of scope per Chapter 4/16.2).
     """
 
-    wilaya = forms.ChoiceField(choices=WILAYA_CHOICES)
+    wilaya = forms.ChoiceField(choices=wilaya_choices)
 
     class Meta:
         model = Address

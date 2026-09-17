@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 
-from core.constants import WILAYA_CHOICES
+from core.constants import wilaya_choices
 
 
 class Dealer(models.Model):
@@ -10,7 +10,7 @@ class Dealer(models.Model):
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=170, unique=True, blank=True)
     city = models.CharField(max_length=100)
-    wilaya = models.CharField(max_length=2, choices=WILAYA_CHOICES)
+    wilaya = models.CharField(max_length=2, choices=wilaya_choices)
     address = models.CharField(max_length=255)
     phone = models.CharField(max_length=30)
     email = models.EmailField(blank=True)

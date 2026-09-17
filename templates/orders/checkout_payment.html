@@ -35,14 +35,37 @@
               {# mailing flow. The BaridiMob option only appears once a #}
               {# sales account exists to receive the money — the form #}
               {# enforces the same rule server-side. #}
+              {% if checkout_settings.card_payments_enabled %}
               <label class="payment-method{% if form.payment_method.value == 'cib' or not form.payment_method.value %} active{% endif %}" data-method-option>
                 <input type="radio" name="payment_method" value="cib" style="position:absolute;opacity:0;width:0;height:0"{% if form.payment_method.value == "cib" or not form.payment_method.value %} checked{% endif %}>
                 <i class="bx bx-credit-card"></i>
                 <div><h6>CIB / Edahabia Card</h6><p>Pay online with an Algerian bank card — you'll be taken to our secure payment page after placing your order</p></div>
               </label>
+              {% else %}
+              {# Card payments are built and wired (orders/chargily.py) but #}
+              {# switched off at Core > Checkout Settings until Chargily has #}
+              {# verified the account. Shown rather than hidden: customers #}
+              {# arrive expecting to pay by card, and "coming soon" answers #}
+              {# that question where a missing option would just look broken. #}
+              {# Non-interactive by construction — no radio at all, so there #}
+              {# is nothing to click, focus, or submit; the form refuses the #}
+              {# value server-side too. #}
+              <div class="payment-method" aria-disabled="true"
+                   style="opacity:.45;cursor:not-allowed;pointer-events:none;position:relative">
+                <i class="bx bx-credit-card"></i>
+                <div>
+                  <h6>CIB / Edahabia Card
+                    <span style="display:inline-block;margin-left:8px;padding:2px 8px;background:var(--bone);color:#777;border:1px solid #ddd;border-radius:999px;font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle">Coming Soon</span>
+                  </h6>
+                  <p>{{ checkout_settings.card_payments_unavailable_note|default:"Card payments are coming soon — please use one of the options below." }}</p>
+                </div>
+              </div>
+              {% endif %}
               {% if company.has_sales_account %}
-              <label class="payment-method{% if form.payment_method.value == 'baridimob' %} active{% endif %}" data-method-option>
-                <input type="radio" name="payment_method" value="baridimob" style="position:absolute;opacity:0;width:0;height:0"{% if form.payment_method.value == "baridimob" %} checked{% endif %}>
+              {# With cards off, BaridiMob is the first selectable option, so #}
+              {# it inherits the "nothing chosen yet" default that CIB held. #}
+              <label class="payment-method{% if form.payment_method.value == 'baridimob' or not form.payment_method.value and not checkout_settings.card_payments_enabled %} active{% endif %}" data-method-option>
+                <input type="radio" name="payment_method" value="baridimob" style="position:absolute;opacity:0;width:0;height:0"{% if form.payment_method.value == "baridimob" or not form.payment_method.value and not checkout_settings.card_payments_enabled %} checked{% endif %}>
                 <i class="bx bx-transfer"></i>
                 <div><h6>BaridiMob / CCP / Bank Transfer</h6><p>Transfer to our sales account, then upload your receipt — we confirm it by email</p></div>
               </label>
@@ -50,7 +73,7 @@
               {# before choosing. The authoritative copy of these details is #}
               {# emailed with the order too, since a checkout page is the one #}
               {# place they're guaranteed to navigate away from. #}
-              <div data-baridimob-details style="display:{% if form.payment_method.value == 'baridimob' %}block{% else %}none{% endif %};background:var(--bone);border-left:3px solid var(--volt-dim);padding:16px 18px;margin:-4px 0 16px">
+              <div data-baridimob-details style="display:{% if form.payment_method.value == 'baridimob' or not form.payment_method.value and not checkout_settings.card_payments_enabled %}block{% else %}none{% endif %};background:var(--bone);border-left:3px solid var(--volt-dim);padding:16px 18px;margin:-4px 0 16px">
                 <p style="font-size:.82rem;color:#555;margin:0 0 10px;line-height:1.6">
                   After you place the order we'll show you our account details and email them to you.
                   Transfer the total, upload the receipt, and we'll confirm it — usually within one
@@ -61,8 +84,9 @@
                 </p>
               </div>
               {% endif %}
-              <label class="payment-method{% if form.payment_method.value == 'manual' %} active{% endif %}" data-method-option>
-                <input type="radio" name="payment_method" value="manual" style="position:absolute;opacity:0;width:0;height:0"{% if form.payment_method.value == "manual" %} checked{% endif %}>
+              {# Last fallback default: nothing chosen, no cards, no sales account. #}
+              <label class="payment-method{% if form.payment_method.value == 'manual' or not form.payment_method.value and not checkout_settings.card_payments_enabled and not company.has_sales_account %} active{% endif %}" data-method-option>
+                <input type="radio" name="payment_method" value="manual" style="position:absolute;opacity:0;width:0;height:0"{% if form.payment_method.value == "manual" or not form.payment_method.value and not checkout_settings.card_payments_enabled and not company.has_sales_account %} checked{% endif %}>
                 <i class="bx bx-money"></i>
                 <div><h6>Manual Order</h6><p>Cash on delivery or CCP / bank virement — our team will email you to confirm</p></div>
               </label>
@@ -81,16 +105,26 @@
             {# classes rather than inventing new ones — no new CSS, no new icon set. #}
             <div class="checkout-panel">
               <h3>Financing &amp; Insurance <span style="font-weight:400;color:#999;font-size:.8rem">(optional)</span></h3>
-              <div class="form-group">
-                <label class="form-label">Financing Plan</label>
-                <select name="financing_plan" class="form-select">
+              {# Financing attaches only to a card payment (edge case 15.1), so #}
+              {# it goes dark with the card option rather than staying live as #}
+              {# an offer that can only ever fail validation. The plans #}
+              {# themselves are untouched — /financing/ still lists them. #}
+              <div class="form-group"{% if not checkout_settings.card_payments_enabled %} style="opacity:.45"{% endif %}>
+                <label class="form-label">Financing Plan{% if not checkout_settings.card_payments_enabled %} <span style="display:inline-block;margin-left:6px;padding:2px 8px;background:var(--bone);color:#777;border:1px solid #ddd;border-radius:999px;font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle">Coming Soon</span>{% endif %}</label>
+                <select name="financing_plan" class="form-select"{% if not checkout_settings.card_payments_enabled %} disabled{% endif %}>
                   <option value="">No financing — pay in full</option>
                   {% for plan in form.fields.financing_plan.queryset %}
                   <option value="{{ plan.pk }}"{% if form.financing_plan.value|stringformat:"s" == plan.pk|stringformat:"s" %} selected{% endif %}>{{ plan.term_months }} Months — {{ plan.apr|floatformat:"-2" }}% APR</option>
                   {% endfor %}
                 </select>
                 {% for error in form.financing_plan.errors %}<div style="color:var(--error);font-size:.8rem;margin-top:4px">{{ error }}</div>{% endfor %}
-                <p style="font-size:.78rem;color:#999;margin-top:6px">Requires Credit/Debit Card as the payment method. See <a href="{% url 'programs:financing' %}" style="color:var(--ink);font-weight:700">Financing</a> for full plan details.</p>
+                <p style="font-size:.78rem;color:#999;margin-top:6px">
+                  {% if checkout_settings.card_payments_enabled %}
+                  Requires a CIB / Edahabia card as the payment method. See <a href="{% url 'programs:financing' %}" style="color:var(--ink);font-weight:700">Financing</a> for full plan details.
+                  {% else %}
+                  Financing is paid by CIB / Edahabia card, so it becomes available together with card payments. See <a href="{% url 'programs:financing' %}" style="color:var(--ink);font-weight:700">Financing</a> for plan details in the meantime.
+                  {% endif %}
+                </p>
               </div>
               <div class="form-group">
                 <label class="form-label">Insurance Tier</label>

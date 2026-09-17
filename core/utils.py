@@ -1,19 +1,13 @@
 """
 core.utils
 
-Helpers built on the core app's own models (CompanyInfo, VATRate,
-ShippingZone).
+Helpers built on the core app's own models (CompanyInfo, CheckoutSettings,
+VATRate, ShippingZone).
 """
 
 from decimal import Decimal
 
-from core.constants import (
-    EXPRESS_SHIPPING_SURCHARGE,
-    FREE_SHIPPING_THRESHOLD,
-    STANDARD_SHIPPING_FEE,
-)
-
-from .models import CompanyInfo, ShippingZone, VATRate
+from .models import CheckoutSettings, CompanyInfo, ShippingZone, VATRate
 
 
 def get_vat_rate(wilaya_code):
@@ -43,18 +37,24 @@ def get_shipping_cost(*, subtotal, delivery_method, wilaya_code):
     """
     BR-CHK-02, re-based on wilayas.
 
-    Free above FREE_SHIPPING_THRESHOLD; otherwise the destination wilaya's
-    own home-delivery fee (ShippingZone), falling back to the flat
-    STANDARD_SHIPPING_FEE constant when that wilaya has no row configured
-    yet. Express adds its surcharge on top of that determination -- it never
-    replaces it, and it is never added to an order that already ships free.
+    Free above CheckoutSettings.free_shipping_threshold; otherwise the
+    destination wilaya's own home-delivery fee (ShippingZone), falling back
+    to CheckoutSettings.standard_shipping_fee when that wilaya has no row
+    configured yet. Express adds its surcharge on top of that determination
+    -- it never replaces it, and it is never added to an order that already
+    ships free.
+
+    All three figures come from the CheckoutSettings singleton rather than
+    module constants, so re-pricing delivery is an admin edit.
     """
-    if subtotal >= FREE_SHIPPING_THRESHOLD:
+    settings_row = CheckoutSettings.get_safe()
+
+    if subtotal >= settings_row.free_shipping_threshold:
         return Decimal("0.00")
 
     zone = get_shipping_zone(wilaya_code)
-    base = zone.home_fee if zone else STANDARD_SHIPPING_FEE
+    base = zone.home_fee if zone else settings_row.standard_shipping_fee
 
     if delivery_method == "express":
-        base += EXPRESS_SHIPPING_SURCHARGE
+        base += settings_row.express_shipping_surcharge
     return Decimal(base).quantize(Decimal("0.01"))

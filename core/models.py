@@ -1,6 +1,158 @@
 from django.db import models
 
-from core.constants import WILAYA_CHOICES
+from core.constants import (
+    DEFAULT_EXPRESS_SHIPPING_SURCHARGE,
+    DEFAULT_FREE_SHIPPING_THRESHOLD,
+    DEFAULT_STANDARD_SHIPPING_FEE,
+    wilaya_choices,
+)
+
+
+class Wilaya(models.Model):
+    """
+    One Algerian province, and the single source of truth for every
+    "which wilaya?" dropdown on the site -- Address, Order.delivery_wilaya,
+    Dealer, CompanyInfo, ShippingZone and VATRate all take their choices
+    from this table via core.constants.wilaya_choices.
+
+    Previously this was a hardcoded 58-entry list in core/constants.py.
+    It is a table now for one concrete reason: the list genuinely changes.
+    Algeria's 2026 reform takes the official count to 69 from January 2027,
+    couriers will adopt the new codes on their own schedule, and in the
+    meantime a wilaya we simply can't deliver to needs to come *off* the
+    dropdown for a while. All three are admin edits now, not deploys.
+
+    `is_active` is how you withdraw one without deleting it: existing
+    orders keep resolving their stored code to a name, but nobody can pick
+    it at checkout.
+    """
+
+    code = models.CharField(
+        max_length=2, unique=True,
+        help_text="Official 2-digit wilaya code (01-58) as used by the courier networks.",
+    )
+    name = models.CharField(max_length=100, help_text="Display name shown in dropdowns.")
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Uncheck to withdraw this wilaya from every dropdown without deleting it "
+                  "(existing orders keep resolving its name).",
+    )
+
+    class Meta:
+        verbose_name = "Wilaya"
+        verbose_name_plural = "Wilayas"
+        ordering = ["code"]
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class Language(models.Model):
+    """
+    An interface language offered on Account > Preferences (spec 6.17).
+
+    A table rather than a constant so a language can be added or pulled
+    the moment its translations are (or stop being) ready, which is
+    exactly the sort of thing that shouldn't wait for a release.
+    """
+
+    code = models.CharField(
+        max_length=5, unique=True, help_text='Language code, e.g. "fr", "ar", "kab".'
+    )
+    name = models.CharField(max_length=100, help_text="Name shown in the selector, in that language.")
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveSmallIntegerField(
+        default=0, help_text="Lower numbers appear first in the selector."
+    )
+
+    class Meta:
+        ordering = ["sort_order", "code"]
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class CheckoutSettings(models.Model):
+    """
+    Singleton holding the checkout rules that used to be Decimal literals
+    in core/constants.py, plus which online payment routes are currently
+    open for business.
+
+    The pricing half exists because these numbers are business decisions
+    with a short shelf life. The free-shipping threshold in particular is
+    priced against the catalogue: set it at 150,000 DZD in a shop selling
+    motorcycles priced in the millions and *every* order ships free, which
+    makes the paid delivery tiers decorative. Whoever notices that should
+    be able to fix it in the admin, in a minute, rather than filing a
+    change request against a Python file.
+
+    The payment half (`card_payments_enabled`) is the kill switch for the
+    CIB/Edahabia route. The whole Chargily integration stays wired up and
+    functional behind it -- see orders/chargily.py -- so turning cards on
+    once Chargily has approved the account and the keys are in `.env` is
+    a single checkbox, with no code to re-enable.
+    """
+
+    free_shipping_threshold = models.DecimalField(
+        max_digits=12, decimal_places=2, default=DEFAULT_FREE_SHIPPING_THRESHOLD,
+        help_text="Orders at or above this subtotal (DZD) ship free, whichever delivery "
+                  "method was chosen. Set it high enough that it doesn't swallow every order.",
+    )
+    standard_shipping_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, default=DEFAULT_STANDARD_SHIPPING_FEE,
+        help_text="Flat home-delivery fee (DZD) used for wilayas with no Shipping Zone row of their own.",
+    )
+    express_shipping_surcharge = models.DecimalField(
+        max_digits=10, decimal_places=2, default=DEFAULT_EXPRESS_SHIPPING_SURCHARGE,
+        help_text="Added on top of the home-delivery fee for Express. Never charged on a free-shipping order.",
+    )
+
+    card_payments_enabled = models.BooleanField(
+        default=False, verbose_name="CIB / Edahabia card payments enabled",
+        help_text="Off until Chargily has verified the account and CHARGILY_KEY/CHARGILY_SECRET are set. "
+                  "While off, the card option is shown at checkout as 'coming soon' and cannot be "
+                  "selected (server-side too, not just visually).",
+    )
+    card_payments_unavailable_note = models.CharField(
+        max_length=255, blank=True,
+        default="Card payments are coming soon — please use one of the options below.",
+        help_text="Shown under the greyed-out card option while card payments are disabled.",
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Checkout Settings"
+        verbose_name_plural = "Checkout Settings"
+
+    def __str__(self):
+        return "Checkout Settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # enforce singleton row
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Singleton: configuration, not deletable data.
+        pass
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @classmethod
+    def get_safe(cls):
+        """
+        get_solo(), but survivable before the table exists (fresh `migrate`,
+        a check run on an empty database). Returns an unsaved instance
+        carrying the field defaults rather than raising, so pricing helpers
+        and checkout templates never depend on migration order.
+        """
+        try:
+            return cls.get_solo()
+        except Exception:
+            return cls()
 
 
 class CompanyInfo(models.Model):
@@ -33,7 +185,7 @@ class CompanyInfo(models.Model):
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=100, help_text="Commune / city.")
     postal_code = models.CharField(max_length=20, help_text="5-digit Algerian postal code.")
-    wilaya = models.CharField(max_length=2, choices=WILAYA_CHOICES, default="16")
+    wilaya = models.CharField(max_length=2, choices=wilaya_choices, default="16")
 
     email = models.EmailField()
     phone = models.CharField(max_length=30)
@@ -186,7 +338,7 @@ class VATRate(models.Model):
     exemption is exactly a "this wilaya bills a different rate" row.
     """
 
-    wilaya = models.CharField(max_length=2, choices=WILAYA_CHOICES, unique=True)
+    wilaya = models.CharField(max_length=2, choices=wilaya_choices, unique=True)
     rate_percent = models.DecimalField(max_digits=5, decimal_places=2, help_text="e.g. 19.00 for 19%")
     is_active = models.BooleanField(default=True)
 
@@ -207,15 +359,15 @@ class ShippingZone(models.Model):
     courier network prices by wilaya (and charges more for the south), and
     quotes a different number of days per wilaya, so the fee can't be a
     single constant anymore. core.utils.get_shipping_quote reads this table
-    and falls back to the flat constants in core.constants when a wilaya has
-    no row yet, which keeps checkout working on a fresh install.
+    and falls back to CheckoutSettings.standard_shipping_fee when a wilaya
+    has no row yet, which keeps checkout working on a fresh install.
 
     `desk_fee` supports "stopdesk" delivery -- collection from the courier's
     own agency, which is how most Algerian e-commerce delivery actually
     happens and is always cheaper than delivery to the door (`home_fee`).
     """
 
-    wilaya = models.CharField(max_length=2, choices=WILAYA_CHOICES, unique=True)
+    wilaya = models.CharField(max_length=2, choices=wilaya_choices, unique=True)
     home_fee = models.DecimalField(
         max_digits=10, decimal_places=2,
         help_text="Cost of delivery to the customer's address (à domicile), in DZD.",
